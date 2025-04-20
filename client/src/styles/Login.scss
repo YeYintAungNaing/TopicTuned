@@ -1,0 +1,96 @@
+.login{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+
+    .init-btn {
+        
+        width: 200px;
+        height: 110px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: auto;
+            
+        background-color: #2298d7; 
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        outline: none;
+        transition: all 0.3s ease;
+        
+        
+        &:hover {
+          background-color: #00a7cc;
+          transform: translateY(-4px);
+        }
+    }
+
+
+    p{
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 0px;
+        margin-top: 0px;
+    }
+
+    input{
+        width: 300px;
+        height: 35px;
+        padding-left: 7px;    
+        border: 1px solid;  
+        border-radius: 5px;
+        font-size: 16px;  
+        outline: none;     
+    }
+    input:focus{
+        border-color:  rgb(100, 139, 211);
+        box-shadow: 0 0 5px  rgb(100, 139, 211);    
+    }
+
+    button{
+        width: 300px;
+        height: 35px;
+        font-size: 16px;
+        border: 0px;
+        color: white;
+        background-color: rgb(47, 108, 223);
+
+        &:hover{
+            cursor: pointer;
+            transform: scale(1.05);
+        }
+    }
+
+    .links{
+        text-decoration: none;
+        
+    }
+
+    .register{
+        background-color:white;
+        color: rgb(100, 139, 211);
+        border: solid 1px  rgb(47, 108, 223);
+        
+    }
+
+
+    .login-card{
+        height: 400px;
+        width: 370px;
+        background-color: aliceblue;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        gap: 23px;
+        align-items: center;
+        border: 0.5px solid ;
+        border-radius: 15px;   
+    }
+}

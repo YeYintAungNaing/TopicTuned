@@ -1,0 +1,71 @@
+.register{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    
+
+    p{
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 0px;
+        margin-top: 0px;
+    }
+
+    input{
+
+        width: 300px;
+        height: 35px;
+        padding-left: 7px;
+        
+        border: 1px solid;
+    
+        border-radius: 5px;
+        font-size: 16px;  
+        outline: none;     
+    }
+    input:focus{
+        border-color:  rgb(100, 139, 211);
+        box-shadow: 0 0 5px  rgb(100, 139, 211);    
+    }
+
+    button{
+        width: 300px;
+        height: 35px;
+        font-size: 16px;
+        border: 0px;
+        color: white;
+        background-color: rgb(47, 108, 223);
+
+        &:hover{
+            cursor: pointer;
+            transform: scale(1.05);
+        }
+    }
+
+    .links{
+        text-decoration: none;
+    }
+
+    .login{
+        background-color:white;
+        color: rgb(100, 139, 211);
+        border: solid 1px  rgb(47, 108, 223);
+        
+    }
+
+
+    .register-card{
+        height: 400px;
+        width: 370px;
+        background-color: aliceblue;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        gap: 23px;
+        align-items: center;
+        border: 0.5px solid ;
+        border-radius: 15px;
+        
+    }
+}

@@ -16,11 +16,40 @@ export default function Home() {
   async function fetchNews() {
     try {
       const newsData : any = await axios.get(`${API_BASE_URL}/GNews`);
-      console.log(newsData.data)
       setNews(newsData.data)
     }
-    catch(e) {
-      console.log(e)
+    catch(e  : any) {
+      if(e.response) {   
+        if(e.response.data.ServerErrorMsg) {  
+          console.log(e.response.data.ServerErrorMsg)  
+        }
+        else {
+          console.log(e.message)  
+        }
+      }
+      else{  
+        console.log(e)
+      } 
+    }   
+  }
+
+  async function fetchYoutube() {
+    try {
+      const newsData : any = await axios.get(`${API_BASE_URL}/Youtube`);
+      console.log(newsData.data)
+    }
+    catch(e  : any) {
+      if(e.response) {   
+        if(e.response.data.ServerErrorMsg) {  
+          console.log(e.response.data.ServerErrorMsg)  
+        }
+        else {
+          console.log(e.message)  
+        }
+      }
+      else{  
+        console.log(e)
+      } 
     }   
   }
 
@@ -29,7 +58,8 @@ export default function Home() {
 
     <div>
       <input value={topic} placeholder="Enter your topic" onChange={(e) => {setTopic(e.target.value)}} type="text" />
-      <button onClick={fetchNews}>fetch</button>
+      <button onClick={fetchNews}>fetchGnews</button>
+      <button onClick={fetchYoutube}>fetchYt</button>
       
       {
         news && news.length > 0 &&  (

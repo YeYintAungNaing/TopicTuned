@@ -5,7 +5,7 @@ import { GlobalState } from "./GlobalState";
 
 export const GlobalContext = ({ children }: { children: React.ReactNode }) => {
   
-  const [currentUser, setCurrentUser] = useState<any>("test")
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   return (
     <GlobalState.Provider 
