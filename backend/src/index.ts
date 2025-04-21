@@ -58,18 +58,31 @@ app.post("/auth/register", async (req, res) => {
       [userName]
     );
 
-
     if (duplicateUser.rows.length > 0) { 
       res.status(409).json({ ServerErrorMsg: "Username is already taken" });
+      return
+        
     }
 
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    await db.query(
-      'INSERT INTO users (user_name, password) VALUES ($1, $2)',
+    const returnedData = await db.query(
+      'INSERT INTO users (user_name, password) VALUES ($1, $2) RETURNING user_id',
       [userName, hashedPassword]
-    );
+    )
+    const user_id = returnedData?.rows[0]?.user_id
+   
+
+    if (!user_id) {
+      //await db.query("DELETE from users WHERE user_id = $1", [user_id])
+      throw Error("Unexpected error")
+    }
+   
+    await db.query(
+      'INSERT INTO preferences (user_id) VALUES ($1)',
+      [user_id]
+    )
 
     res.status(200).json({message : "Successfully registered"})
 
@@ -147,6 +160,51 @@ app.get('/Youtube', async (req, res) => {
             console.log(err)
         }
 })
+
+app.get('/preferences', async (req, res) => {
+  try{
+    
+    const user_id = 8
+   
+    const response = await db.query(
+      'SELECT * FROM preferences WHERE user_id = $1',
+      [user_id]
+    );
+    console.log(response)
+    res.status(200).json(response.rows[0])
+    
+  }
+  catch(e) {
+    res.status(500).json({ServerErrorMsg: "Internal Server Error" })
+    console.log(e)
+}
+})
+
+
+app.put('/preferences', async (req, res) => {
+  try{
+    
+    const {gnews, youtube, reddit} = req.body
+    const user_id = 8
+    console.log(gnews)
+    console.log(youtube)
+    console.log(reddit)
+   
+    await db.query(
+      'UPDATE preferences set gnews = $1, youtube = $2, reddit = $3 WHERE user_id = $4',
+      [gnews, youtube, reddit, user_id]
+    );
+    res.status(200).json({message : "Topic added successful"})
+    
+  }
+  catch(e) {
+    res.status(500).json({ServerErrorMsg: "Internal Server Error" })
+    console.log(e)
+}
+})
+
+
+
 
 
 app.listen(8800, ()=> {
