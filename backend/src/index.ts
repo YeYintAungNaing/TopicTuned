@@ -4,6 +4,9 @@ import axios from 'axios'
 import 'dotenv/config';
 import db from './db'
 import bcrypt from "bcrypt"
+import jwt from 'jsonwebtoken'
+import cookieParser from "cookie-parser"
+import { syncBuiltinESMExports } from "module";
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -42,11 +45,13 @@ interface YoutubePlaylist {
 
 const app = express()
 app.use(express.json())
+app.use(cookieParser())
 
 app.use(cors({
     origin: ["http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
     allowedHeaders: ["Authorization", "Content-Type"],
+    credentials: true
 }))
 
 
@@ -94,11 +99,86 @@ app.post("/auth/register", async (req, res) => {
 })
 
 
+app.post("/auth/login", async (req, res) => {
+  try{
+  
+      const userData = await db.query(  // empty array in case no matching
+        'SELECT * FROM users where user_name = $1',
+        [req.body.userName]
+      );
+      
+      if (userData.rows.length === 0) { 
+        res.status(409).json({ ServerErrorMsg: "User not found" });
+        return  
+      }
+
+      const isCorrect = bcrypt.compareSync(req.body.password, userData.rows[0].password);
+
+      if(!isCorrect) {
+          res.status(401).json({ ServerErrorMsg: "Incorrect password" });
+          return
+      }
+
+      const token = jwt.sign({userId : userData.rows[0].user_id}, "jwtkey", { expiresIn: '10h' })
+
+      const {password, ...userDetails} =  userData.rows[0] 
+      res.cookie('jwt_token', token, {    
+          httpOnly:true,
+          secure: true,  
+          sameSite : "none",  
+          maxAge: 3600 * 10 * 1000 
+      }).status(200).json(userDetails)     
+  }
+  catch(e) {
+      res.status(500).json({ ServerErrorMsg: "Internal Server Error" })
+      console.log(e)
+  }
+})
+
+
 app.get('/GNews', async (req, res) => {
     try{
-        const response : any = await axios.get(`https://gnews.io/api/v4/top-headlines?category=technology&lang=en&country=us&max=3&apikey=${GNEWS_API_KEY}`)
-        //console.log(response.data.articles)
-        res.status(200).json(response.data.articles)
+
+      const token = req.cookies?.jwt_token;
+
+      if (!token){
+          res.status(401).json({ ServerErrorMsg: "Not logged in" });
+          return
+      }
+
+      jwt.verify(token, "jwtkey", async (err, decoded) => {
+
+          if (err) {
+              return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+          }
+          const categories = await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
+
+          if (categories.rows.length === 0) {
+            return res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
+          }
+
+          const gnewsCategories : string[] = categories.rows[0].gnews 
+          const subRedditList : string[] = categories.rows[0].reddit 
+          const youtubeChannels : string[] = categories.rows[0].youtube
+
+          console.log(gnewsCategories)
+          console.log(subRedditList)
+          console.log(youtubeChannels)
+
+          
+          // for (let category of gnewsCategories) {
+
+          // }
+
+        
+          const response : any = await axios.get(`https://gnews.io/api/v4/top-headlines?category=${gnewsCategories[0]}y&lang=en&country=us&max=3&apikey=${GNEWS_API_KEY}`)
+          
+          res.status(200).json(response.data.articles)
+      })
+      
+      
+
+        
         
     }
     catch(e) {
@@ -110,7 +190,7 @@ app.get('/GNews', async (req, res) => {
 
 app.get('/Youtube', async (req, res) => {
         try {
-          
+  
           const channelRes  = await axios.get<YouTubeChannelsResponse>(
             `https://www.googleapis.com/youtube/v3/channels`,
             {
@@ -140,8 +220,8 @@ app.get('/Youtube', async (req, res) => {
               },
             }
           );
+   
 
-      
           const videos = videosRes.data.items.map((item: YouTubePlaylistItem) => {
             const snippet = item.snippet;
             return {
@@ -161,6 +241,41 @@ app.get('/Youtube', async (req, res) => {
         }
 })
 
+
+app.get('/auth/verifyToken' , (req, res) => {
+
+  try{
+      const token = req.cookies?.jwt_token;
+
+      if (!token){
+          res.status(401).json({ ServerErrorMsg: "Not logged in" });
+          return
+      }
+
+      jwt.verify(token, "jwtkey", async (err, decoded) => {
+          if (err) return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+      
+          const userData = await db.query(`SELECT * FROM users where user_id = $1`, [decoded.userId])  //  userId when the token is first created 
+        
+          if (userData.rows.length === 0) { 
+            res.status(409).json({ ServerErrorMsg: "no valid user data" });
+            return  
+          }
+
+          // eslint-disable-next-line no-unused-vars
+          const {password, ...other} = userData.rows[0]
+          res.status(200).json(other)
+          return
+      });
+  }
+
+  catch(e) {
+      res.status(500).json({ ServerErrorMsg: "Internal Server Error" })
+      console.log(e)
+  }
+})
+
+
 app.get('/preferences', async (req, res) => {
   try{
     
@@ -170,21 +285,21 @@ app.get('/preferences', async (req, res) => {
       'SELECT * FROM preferences WHERE user_id = $1',
       [user_id]
     );
-    console.log(response)
+    //console.log(response)
     res.status(200).json(response.rows[0])
     
   }
   catch(e) {
     res.status(500).json({ServerErrorMsg: "Internal Server Error" })
     console.log(e)
-}
+  }
 })
 
 
 app.put('/preferences', async (req, res) => {
   try{
     
-    const {gnews, youtube, reddit} = req.body
+    const { gnews, youtube, reddit } = req.body
     const user_id = 8
     console.log(gnews)
     console.log(youtube)
@@ -194,17 +309,15 @@ app.put('/preferences', async (req, res) => {
       'UPDATE preferences set gnews = $1, youtube = $2, reddit = $3 WHERE user_id = $4',
       [gnews, youtube, reddit, user_id]
     );
+
     res.status(200).json({message : "Topic added successful"})
     
   }
   catch(e) {
     res.status(500).json({ServerErrorMsg: "Internal Server Error" })
     console.log(e)
-}
+  }
 })
-
-
-
 
 
 app.listen(8800, ()=> {

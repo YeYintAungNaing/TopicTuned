@@ -16,33 +16,33 @@ export default function Login() {
     //axios.defaults.withCredentials = true;
 
     async function loginOnline() {
-      navigate('/')
-      // try{
-      //   const response = await axios.post(`${API_BASE_URL}/auth/login`, {userName, password});
+      
+      try{
+        const response = await axios.post(`${API_BASE_URL}/auth/login`, {userName, password});
         
-      //   if (typeof response.data !== "object") {
-      //     throw new Error("Invalid API response. Expected JSON but received HTML.");
-      //   }
+        if (typeof response.data !== "object") {
+          throw new Error("Invalid API response. Expected JSON but received HTML.");
+        }
      
-      //   //setCurrentUser(response.data)
-      //   //showAlert("Login scuuess", "success") 
-      //   navigate('/')
+        setCurrentUser(response.data)
+        //showAlert("Login scuuess", "success") 
+        navigate('/')
          
-      // }catch(e) {
-      //   if(e.response) {   
-      //     if(e.response.data.ServerErrorMsg) {  
-      //       console.log(e.response.data.ServerErrorMsg)
-      //       //showAlert(e.response.data.ServerErrorMsg, "error") 
-      //     }
-      //     else {
-      //       console.log(e.message)   
-      //      /// showAlert(e.message, "error")
-      //     }
-      //   }
-      //   else{  
-      //     console.log(e)
-      //   } 
-      // }
+      }catch(e) {
+        if(e.response) {   
+          if(e.response.data.ServerErrorMsg) {  
+            console.log(e.response.data.ServerErrorMsg)
+            //showAlert(e.response.data.ServerErrorMsg, "error") 
+          }
+          else {
+            console.log(e.message)   
+           /// showAlert(e.message, "error")
+          }
+        }
+        else{  
+          console.log(e)
+        } 
+      }
   }
     //console.log(selectedMode)
 

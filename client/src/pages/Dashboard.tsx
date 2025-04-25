@@ -44,22 +44,17 @@ export default function Dashboard() {
         console.log(e.message)
         //showAlert(e.message, 'error')
       }
-    }
-
-
-    
+    }    
   }
 
 
   async function getPreferences() {  // should be in useeffect eventually
 
-    
     try{
       const response = await axios.get(`${API_BASE_URL}/preferences`)
-      setGnewsTopics(response.data.gnews || [])
-      console.log(response.data)
-      setReddits(response.data.reddit || [])
-      setYoutubes(response.data.youtube || [])
+      setGnewsTopics(response.data.gnews)
+      setReddits(response.data.reddit)
+      setYoutubes(response.data.youtube)
     }
   
     catch(e) {
@@ -72,11 +67,9 @@ export default function Dashboard() {
         //showAlert(e.message, 'error')
       }
     }
-
   }
 
   
-
   return (
     <div>
        <div className="dropdown-container">

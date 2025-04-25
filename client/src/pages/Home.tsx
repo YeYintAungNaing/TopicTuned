@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { GlobalState } from "../context/GlobalState";
 import axios from 'axios'
 import { API_BASE_URL } from "../config";
+import {  useNavigate } from "react-router-dom";
 
 
 export default function Home() {
 
-  const {currentUser, setCurrentUser} = useContext(GlobalState)!;
+  const {currentUser, isLoading, setIsLoading} = useContext(GlobalState)!;
   const [news, setNews] = useState([])
   const [topic, setTopic] = useState<string>("") 
+  const navigate = useNavigate()
 
   //console.log(currentUser)
 
@@ -28,10 +30,11 @@ export default function Home() {
         }
       }
       else{  
-        console.log(e)
+        console.log(e.message)
       } 
     }   
   }
+  
 
   async function fetchYoutube() {
     try {
@@ -54,24 +57,42 @@ export default function Home() {
   }
 
 
+  useEffect(() => {
+    if (!isLoading && !currentUser) {
+      navigate('/login')
+    }
+  }, [isLoading, currentUser])
+
+
   return (
 
+
     <div>
-      <input value={topic} placeholder="Enter your topic" onChange={(e) => {setTopic(e.target.value)}} type="text" />
-      <button onClick={fetchNews}>fetchGnews</button>
-      <button onClick={fetchYoutube}>fetchYt</button>
-      
       {
-        news && news.length > 0 &&  (
-          news.map((each : any, i)=> (
-            <div key={i}>
-              <h3>{each.title}</h3>
-              <img src={each.image} alt=""></img>
-              <a href={each.url}> read more</a> 
-            </div>
-          ))
+        currentUser && !isLoading ? (
+          <div>
+          <input value={topic} placeholder="Enter your topic" onChange={(e) => {setTopic(e.target.value)}} type="text" />
+          <button onClick={fetchNews}>fetchGnews</button>
+          <button onClick={fetchYoutube}>fetchYt</button>
+          
+          {
+            news && news.length > 0 &&  (
+              news.map((each : any, i)=> (
+                <div key={i}>
+                  <h3>{each.title}</h3>
+                  <img src={each.image} alt=""></img>
+                  <a href={each.url}> read more</a> 
+                </div>
+              ))
+            )
+          }
+        </div>
+        ) : (
+        <div>Loading ....</div>
         )
       }
     </div>
+
+   
   )
 }
