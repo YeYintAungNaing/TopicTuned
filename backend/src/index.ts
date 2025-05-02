@@ -6,7 +6,6 @@ import db from './db'
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
 import cookieParser from "cookie-parser"
-import { syncBuiltinESMExports } from "module";
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -136,6 +135,39 @@ app.post("/auth/login", async (req, res) => {
 })
 
 
+async function fetchNewsByCategory(categories: string[]) {
+  const promises = categories.map((category) =>
+    axios.get(`https://gnews.io/api/v4/top-headlines`, {
+      params: {
+        category,
+        lang: 'en',
+        country: 'us',
+        max: 2,
+        apikey: GNEWS_API_KEY,
+      },
+    })
+  );
+
+  const results = await Promise.allSettled(promises);
+
+  const newsByCategory: Record<string, any[]> = {};
+
+  results.forEach((result : any, index) => {
+    const category = categories[index];
+
+    if (result.status === 'fulfilled') {
+      newsByCategory[category] = result.value.data.articles;
+    } else {
+      console.error(`Failed to fetch category "${category}":`, result.reason);
+      newsByCategory[category] = []; 
+    }
+  });
+
+  return newsByCategory;
+};
+
+
+
 app.get('/GNews', async (req, res) => {
     try{
 
@@ -166,19 +198,17 @@ app.get('/GNews', async (req, res) => {
           console.log(youtubeChannels)
 
           
-          // for (let category of gnewsCategories) {
+          // const response : any = await axios.get(
+          //   `https://gnews.io/api/v4/top-headlines?category=${gnewsCategories[0]}y&lang=en&country=us&max=5&apikey=${GNEWS_API_KEY}`
+          // )
 
-          // }
+          const news : any = await fetchNewsByCategory(gnewsCategories);
 
-        
-          const response : any = await axios.get(`https://gnews.io/api/v4/top-headlines?category=${gnewsCategories[0]}y&lang=en&country=us&max=3&apikey=${GNEWS_API_KEY}`)
+          console.log(news)
           
-          res.status(200).json(response.data.articles)
+          res.status(200).json(news)
       })
       
-      
-
-        
         
     }
     catch(e) {

@@ -4,11 +4,12 @@ import { GlobalState } from "../context/GlobalState";
 import axios from 'axios'
 import { API_BASE_URL } from "../config";
 import {  useNavigate } from "react-router-dom";
+import '../styles/Home.scss'
 
 
 export default function Home() {
 
-  const {currentUser, isLoading, setIsLoading} = useContext(GlobalState)!;
+  const {currentUser, isLoading} = useContext(GlobalState)!;
   const [news, setNews] = useState([])
   const [topic, setTopic] = useState<string>("") 
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ export default function Home() {
     try {
       const newsData : any = await axios.get(`${API_BASE_URL}/GNews`);
       setNews(newsData.data)
+      //console.log(newsData.data)
     }
     catch(e  : any) {
       if(e.response) {   
@@ -76,12 +78,17 @@ export default function Home() {
           <button onClick={fetchYoutube}>fetchYt</button>
           
           {
-            news && news.length > 0 &&  (
-              news.map((each : any, i)=> (
+            news &&  (
+              Object.keys(news).map((eachCategory : string, i)=> (
                 <div key={i}>
-                  <h3>{each.title}</h3>
-                  <img src={each.image} alt=""></img>
-                  <a href={each.url}> read more</a> 
+                  <h1>{eachCategory}</h1>
+                  {news[eachCategory].map((subNews : any, j) => (
+                    <div key={j}>
+                      <h3>{subNews.title}</h3>
+                      <img src={subNews.image} alt=""></img>
+                      <a href={subNews.url}> read more</a> 
+                    </div>  
+                  ))}
                 </div>
               ))
             )
