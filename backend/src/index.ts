@@ -207,9 +207,7 @@ app.get('/GNews', async (req, res) => {
           console.log(news)
           
           res.status(200).json(news)
-      })
-      
-        
+      })     
     }
     catch(e) {
         res.status(500).json({ServerErrorMsg: "Internal Server Error" })
@@ -220,6 +218,14 @@ app.get('/GNews', async (req, res) => {
 
 app.get('/Youtube', async (req, res) => {
         try {
+
+
+          const token = req.cookies?.jwt_token;
+
+          if (!token){
+              res.status(401).json({ ServerErrorMsg: "Not logged in" });
+              return
+          }
   
           const channelRes  = await axios.get<YouTubeChannelsResponse>(
             `https://www.googleapis.com/youtube/v3/channels`,
@@ -269,6 +275,35 @@ app.get('/Youtube', async (req, res) => {
             res.status(500).json({ServerErrorMsg: "Internal Server Error" })
             console.log(err)
         }
+})
+
+
+app.get('/Youtube/channnelId/:handle', async (req, res) => {
+  try {
+    const handle = req.params.handle;
+
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+      params: {
+        part: 'snippet',
+        type: 'channel',
+        q: handle,
+        key: YOUTUBE_API_KEY,
+      },
+    });
+
+    const channel = response.data.items?.[0];
+    if (channel) {
+      res.json({
+        channelId: channel.snippet.channelId,
+        title: channel.snippet.title,
+      });
+    } else {
+      res.status(404).json({ ServerErrorMsg: 'Channel not found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ServerErrorMsg: 'Internal Server Error' });
+  }
 })
 
 
