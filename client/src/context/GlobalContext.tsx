@@ -22,7 +22,7 @@ export const GlobalContext = ({ children }: { children: React.ReactNode }) => {
 
   async function verifyUser() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/auth/verifyToken`);
+      const response : any = await axios.get(`${API_BASE_URL}/auth/verifyToken`);
       if (typeof response.data !== "object") {
         throw new Error("Unexpected Error");
       }

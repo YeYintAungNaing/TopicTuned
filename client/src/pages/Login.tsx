@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {  useContext, useState } from "react"
 
 import { Link, useNavigate } from "react-router-dom";
@@ -28,7 +29,7 @@ export default function Login() {
         //showAlert("Login scuuess", "success") 
         navigate('/')
          
-      }catch(e) {
+      }catch(e : any) {
         if(e.response) {   
           if(e.response.data.ServerErrorMsg) {  
             console.log(e.response.data.ServerErrorMsg)

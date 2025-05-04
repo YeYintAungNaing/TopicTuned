@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { API_BASE_URL } from "../config";
 import axios from 'axios'
 
@@ -15,19 +15,35 @@ const TOPICS = [
   { label: "Health", value: "health" }
 ]
 
+interface YOUTUBE_CHANNEL {
+  channelId : string,
+  title : string
+}
+
+
 export default function Dashboard() {
 
-  const [selectedTopic, setSelectedTopic] = useState('general')
-  const [selectedYoutubeChannel, setSelectedYoutubeChannel] = useState("")
-  const [gnewsTopics, setGnewsTopics] = useState([])
-  const [reddits, setReddits] = useState([])
-  const [youtubes, setYoutubes] = useState([])
-  const [channelInput, setChannelInput] = useState<string>('')
+  const [selectedTopic, setSelectedTopic] = useState<string>('general')
+  const [selectedYoutubeChannel, setSelectedYoutubeChannel] = useState<YOUTUBE_CHANNEL | "">("")
+  const [gnewsTopics, setGnewsTopics] = useState<string[]>([])  // stored news category ["general", "technology"]
+  const [reddits, setReddits] = useState<string[]>([])  // subreddit names
+  const [youtubes, setYoutubes] = useState<string[]>([])  // channelid list
+  const [channelInput, setChannelInput] = useState<string>('') // 
+  const [isReady, setIsReady] = useState<boolean>(false)
 
  
   async function addTopic() {
-    const updatedTopics = [...gnewsTopics, selectedTopic] /// just testing 
-    const updatedChannels = [...youtubes, selectedYoutubeChannel.channelId]
+
+    let updatedTopics = [...gnewsTopics]
+    let updatedChannels = [...youtubes]
+    if (!gnewsTopics.includes(selectedTopic)) {
+      updatedTopics = [...gnewsTopics, selectedTopic] /// just testing 
+    }
+    
+    if (selectedYoutubeChannel) {
+      updatedChannels = [...youtubes, selectedYoutubeChannel.channelId]
+    }
+  
 
     try{
       const response : any = await axios.put(`${API_BASE_URL}/preferences`, {
@@ -55,13 +71,14 @@ export default function Dashboard() {
   }
 
 
-  async function getPreferences() {  // should be in useeffect eventually
+  async function getPreferences() {  
 
     try{
       const response : any = await axios.get(`${API_BASE_URL}/preferences`)
       setGnewsTopics(response.data.gnews)
       setReddits(response.data.reddit)
       setYoutubes(response.data.youtube)
+      setIsReady(true)
     }
   
     catch(e : any) {
@@ -79,8 +96,12 @@ export default function Dashboard() {
     }
   }
 
+  useEffect(()=> {
+    getPreferences()
+  }, [])
 
-  async function getId() {
+
+  async function getId() {   // for getting channel id to save in db
     const handle = channelInput.split("@")[1]
     console.log(handle)
     
@@ -107,13 +128,14 @@ export default function Dashboard() {
         console.log(e.message)
       } 
     }
-
   }
 
 
   return (
     <div>
-       <div className="dropdown-container">
+       {
+        isReady? (
+        <div className="dropdown-container">
               <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
                     {TOPICS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -121,9 +143,8 @@ export default function Dashboard() {
                     </option>
                   ))}
               </select>
-              <button onClick={addTopic}>add topic</button>
-              <button onClick={getPreferences}>get preferences</button>
-              <button onClick={getId}>Get id</button>
+              <button onClick={addTopic}>Update preferences</button>
+              <button onClick={getId}>Search channel</button>
               <input
                 value={channelInput}
                 onChange={(e) => {setChannelInput(e.target.value)}}
@@ -138,7 +159,11 @@ export default function Dashboard() {
                 )
               }
         </div>
-        {}
+        ) : (
+          <div>Loading....</div>
+        )
+       }
+
     </div>
   )
 }

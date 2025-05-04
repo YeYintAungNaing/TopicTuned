@@ -7,10 +7,31 @@ import {  useNavigate } from "react-router-dom";
 import '../styles/Home.scss'
 
 
+interface YOUTUBE_VIDEO {
+  channelTitle : string,
+  publishedAt : string,
+  thumbnail : string,
+  title : string,
+  videoUrl : string
+}
+
+
+interface GNewsArticle {
+  title: string;
+  image: string;
+  url: string;
+};
+
+interface GNewsList {
+  [category: string]: GNewsArticle[];
+};
+
+
 export default function Home() {
 
   const {currentUser, isLoading} = useContext(GlobalState)!;
-  const [news, setNews] = useState([])
+  const [news, setNews] = useState<GNewsList>({})
+  const [youtubeVideos, setYoutubeVideos]  = useState<YOUTUBE_VIDEO[]>([])
   const [topic, setTopic] = useState<string>("") 
   const navigate = useNavigate()
 
@@ -42,6 +63,7 @@ export default function Home() {
     try {
       const newsData : any = await axios.get(`${API_BASE_URL}/Youtube`);
       console.log(newsData.data)
+      setYoutubeVideos(newsData.data)
     }
     catch(e  : any) {
       if(e.response) {   
@@ -78,7 +100,7 @@ export default function Home() {
           <button onClick={fetchYoutube}>fetchYt</button>
           
           {
-            news &&  (
+            news && Object.keys(news).length > 0 &&  (
               Object.keys(news).map((eachCategory : string, i)=> (
                 <div key={i}>
                   <h1>{eachCategory}</h1>
@@ -86,13 +108,26 @@ export default function Home() {
                     <div key={j}>
                       <h3>{subNews.title}</h3>
                       <img src={subNews.image} alt=""></img>
-                      <a href={subNews.url}> read more</a> 
+                      <a href={subNews.url} target="_blank" rel="noopener noreferrer"> read more</a> 
                     </div>  
                   ))}
                 </div>
               ))
             )
           }
+          {
+            youtubeVideos && youtubeVideos.length > 0 && (
+              youtubeVideos.map((eachVideo, i) => (
+                <div key={i}>
+                  <img src={eachVideo.thumbnail} alt=""></img>
+                  <h3>{eachVideo.title}</h3>
+                  <div>{`By ${eachVideo.channelTitle}`}</div>
+                  <a href={eachVideo.videoUrl} target="_blank" rel="noopener noreferrer"> watch video</a>
+                </div>
+              ))
+            )
+          }
+         
         </div>
         ) : (
         <div>Loading ....</div>

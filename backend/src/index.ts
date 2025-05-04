@@ -219,20 +219,28 @@ app.get('/GNews', async (req, res) => {
 app.get('/Youtube', async (req, res) => {
         try {
 
-
           const token = req.cookies?.jwt_token;
 
           if (!token){
               res.status(401).json({ ServerErrorMsg: "Not logged in" });
               return
           }
+
+          const preferences = await db.query('SELECT * FROM preferences WHERE user_id = $1', [8])
+
+          if (preferences.rows.length === 0) {
+            res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
+            return
+          }
+
+          const youtubeChannels : string[] = preferences.rows[0].youtube
   
           const channelRes  = await axios.get<YouTubeChannelsResponse>(
             `https://www.googleapis.com/youtube/v3/channels`,
             {
               params: {
                 part: 'contentDetails',
-                id: CHANNEL_ID,
+                id: youtubeChannels[0],
                 key:YOUTUBE_API_KEY,
               },
             }
@@ -243,7 +251,6 @@ app.get('/Youtube', async (req, res) => {
           if (!uploadsPlaylistId) {
             throw new Error('Unable to retrieve uploads playlist ID');
           }
-      
         
           const videosRes = await axios.get<YoutubePlaylist>(
             `https://www.googleapis.com/youtube/v3/playlistItems`,
@@ -251,7 +258,7 @@ app.get('/Youtube', async (req, res) => {
               params: {
                 part: 'snippet',
                 playlistId: uploadsPlaylistId,
-                maxResults: 10,
+                maxResults: 6,
                 key: YOUTUBE_API_KEY,
               },
             }
@@ -268,7 +275,7 @@ app.get('/Youtube', async (req, res) => {
               channelTitle: snippet.channelTitle,
             };
           });
-          console.log(videos)
+          //console.log(videos)
           res.status(200).json(videos)
         } 
         catch (err) {
