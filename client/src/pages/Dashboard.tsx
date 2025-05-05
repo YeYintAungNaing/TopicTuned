@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [selectedYoutubeChannel, setSelectedYoutubeChannel] = useState<YOUTUBE_CHANNEL | "">("")
   const [gnewsTopics, setGnewsTopics] = useState<string[]>([])  // stored news category ["general", "technology"]
   const [reddits, setReddits] = useState<string[]>([])  // subreddit names
-  const [youtubes, setYoutubes] = useState<string[]>([])  // channelid list
+  const [youtubes, setYoutubes] = useState<YOUTUBE_CHANNEL[]>([])  // channelid list
   const [channelInput, setChannelInput] = useState<string>('') // 
   const [isReady, setIsReady] = useState<boolean>(false)
 
@@ -41,7 +41,7 @@ export default function Dashboard() {
     }
     
     if (selectedYoutubeChannel) {
-      updatedChannels = [...youtubes, selectedYoutubeChannel.channelId]
+      updatedChannels = [...youtubes, selectedYoutubeChannel]
     }
   
 
@@ -135,7 +135,7 @@ export default function Dashboard() {
     <div>
        {
         isReady? (
-        <div className="dropdown-container">
+          <div>
               <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
                     {TOPICS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -144,20 +144,35 @@ export default function Dashboard() {
                   ))}
               </select>
               <button onClick={addTopic}>Update preferences</button>
-              <button onClick={getId}>Search channel</button>
-              <input
-                value={channelInput}
-                onChange={(e) => {setChannelInput(e.target.value)}}
-                placeholder="channel link"
-              >
-              </input>
-              {
-                selectedYoutubeChannel && (
-                  <div>
-                    <h2> {selectedYoutubeChannel.title}</h2>
-                  </div>
-                )
-              }
+              
+              <div className="youtube">
+                {
+                  youtubes.length > 0 ? (
+                    youtubes.map((eachChannel, i) => (
+                      <div key={i}>{eachChannel.title}</div>
+                    ))
+                  ) : (
+                    <div>You have not added any channel yet</div>
+                  )
+                }
+
+                <input
+                  value={channelInput}
+                  onChange={(e) => {setChannelInput(e.target.value)}}
+                  placeholder="channel link"
+                >
+                </input>
+                <button onClick={getId}>Search channel</button>
+                {
+                  selectedYoutubeChannel? (
+                    <div>
+                      <h2> {selectedYoutubeChannel.title}</h2>
+                    </div>
+                  ) : (
+                    <div>No youtube channel selected</div>
+                  )
+                }
+              </div>
         </div>
         ) : (
           <div>Loading....</div>

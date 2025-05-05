@@ -90,7 +90,6 @@ export default function Home() {
 
   return (
 
-
     <div>
       {
         currentUser && !isLoading ? (
@@ -134,7 +133,5 @@ export default function Home() {
         )
       }
     </div>
-
-   
   )
 }

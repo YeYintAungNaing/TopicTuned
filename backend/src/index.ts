@@ -233,14 +233,14 @@ app.get('/Youtube', async (req, res) => {
             return
           }
 
-          const youtubeChannels : string[] = preferences.rows[0].youtube
+          const youtubeChannels : any= preferences.rows[0].youtube
   
           const channelRes  = await axios.get<YouTubeChannelsResponse>(
             `https://www.googleapis.com/youtube/v3/channels`,
             {
               params: {
                 part: 'contentDetails',
-                id: youtubeChannels[0],
+                id: youtubeChannels[0].channelId,
                 key:YOUTUBE_API_KEY,
               },
             }
