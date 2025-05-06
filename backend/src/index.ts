@@ -9,7 +9,6 @@ import cookieParser from "cookie-parser"
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
-const CHANNEL_ID = 'UC-lHJZR3Gqxm24_Vd_AJ5Yw'
 
 interface YouTubeChannelsResponse {
   items: {
@@ -300,9 +299,11 @@ app.get('/Youtube/channnelId/:handle', async (req, res) => {
 
     const channel = response.data.items?.[0];
     if (channel) {
+      console.log(channel)
       res.json({
         channelId: channel.snippet.channelId,
         title: channel.snippet.title,
+        icon : channel.snippet.thumbnails.default.url
       });
     } else {
       res.status(404).json({ ServerErrorMsg: 'Channel not found' });
@@ -312,6 +313,60 @@ app.get('/Youtube/channnelId/:handle', async (req, res) => {
     res.status(500).json({ ServerErrorMsg: 'Internal Server Error' });
   }
 })
+
+
+// app.get('/reddit/:subreddit', async (req, res) => {
+//   const keyword = req.params.subreddit as string
+
+//   if (!keyword) {
+//     res.status(400).json({ error: 'Missing search keyword' });
+//     return
+//   }
+
+//   try {
+//     const response = await axios.get(`https://www.reddit.com/subreddits/search.json`, {
+//       params: {
+//         q: keyword,
+//         limit: 10,
+//       },
+//       headers: {
+//         'User-Agent': 'TopicTuned/1.0',
+//       },
+//     });
+
+//     const match = response.data.data.children.find((item: any) =>
+//       item.data.display_name.toLowerCase() === keyword.toLowerCase()
+//     );
+
+//     if (!match) {
+//        res.status(404).json({ ServerErrorMsg: 'Subreddit not found' });
+//        return
+//     }
+
+//     const data = match.data;
+//     // const result = {
+//     //   name: data.display_name,
+//     //   title: data.title,
+//     //   icon: data.icon_img || data.community_icon || '',
+//     //   subscribers: data.subscribers,
+//     //   description: data.public_description,
+//     // };
+
+//     const result = {
+//       name: data.display_name,
+//       title: data.title,
+//       icon: data.icon_img || data.community_icon || '',
+//       subscribers: data.subscribers,
+//       description: data.public_description,
+//     };
+
+//     res.json(result);
+//   } 
+//   catch (error: any) {
+//     console.error('Reddit search failed:', error.message);
+//     res.status(500).json({ ServerErrorMsg: "Internal Server Error" });
+//   }
+// });
 
 
 app.get('/auth/verifyToken' , (req, res) => {
@@ -376,7 +431,7 @@ app.put('/preferences', async (req, res) => {
     console.log(gnews)
     console.log(youtube)
     console.log(reddit)
-   
+
     await db.query(
       'UPDATE preferences set gnews = $1, youtube = $2, reddit = $3 WHERE user_id = $4',
       [gnews, youtube, reddit, user_id]
