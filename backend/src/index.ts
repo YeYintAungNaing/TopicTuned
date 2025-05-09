@@ -4,42 +4,44 @@ import axios from 'axios'
 import 'dotenv/config';
 import db from './db'
 import bcrypt from "bcrypt"
-import jwt from 'jsonwebtoken'
+import jwt,  { JwtPayload } from 'jsonwebtoken'
 import cookieParser from "cookie-parser"
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
 
-interface YouTubeChannelsResponse {
-  items: {
-    contentDetails: {
-      relatedPlaylists: {
-        uploads: string;
-      };
-    };
-  }[];
-}
+// interface YouTubeChannelsResponse {
+//   items: {
+//     contentDetails: {
+//       relatedPlaylists: {
+//         uploads: string;
+//       };
+//     };
+//   }[];
+// }
 
-interface YouTubePlaylistItem {
-  snippet: {
-    title: string;
-    publishedAt: string;
-    thumbnails: {
-      medium: {
-        url: string;
-      };
-    };
-    resourceId: {
-      videoId: string;
-    };
-    channelTitle: string;
-  };
-}
+// interface YouTubePlaylistItem {
+//   snippet: {
+//     title: string;
+//     publishedAt: string;
+//     thumbnails: {
+//       medium: {
+//         url: string;
+//       };
+//     };
+//     resourceId: {
+//       videoId: string;
+//     };
+//     channelTitle: string;
+//   };
+// }
 
-interface YoutubePlaylist {
-  items : YouTubePlaylistItem[]
-}
-
+// interface YoutubePlaylist {
+//   items : YouTubePlaylistItem[]
+// }
+// interface JWTDecoded extends JwtPayload {
+//   userId: number;
+// }
 
 const app = express()
 app.use(express.json())
@@ -166,7 +168,6 @@ async function fetchNewsByCategory(categories: string[]) {
 };
 
 
-
 app.get('/GNews', async (req, res) => {
     try{
 
@@ -177,11 +178,14 @@ app.get('/GNews', async (req, res) => {
           return
       }
 
-      jwt.verify(token, "jwtkey", async (err, decoded) => {
+      jwt.verify(token, "jwtkey", async (err , decoded ) => {
 
           if (err) {
               return res.status(403).json({ ServerErrorMsg: "Invalid token" });
           }
+          
+
+          //console.log(decoded)
           const categories = await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
 
           if (categories.rows.length === 0) {
@@ -189,12 +193,12 @@ app.get('/GNews', async (req, res) => {
           }
 
           const gnewsCategories : string[] = categories.rows[0].gnews 
-          const subRedditList : string[] = categories.rows[0].reddit 
-          const youtubeChannels : string[] = categories.rows[0].youtube
+          // const subRedditList : string[] = categories.rows[0].reddit 
+          // const youtubeChannels : string[] = categories.rows[0].youtube
 
-          console.log(gnewsCategories)
-          console.log(subRedditList)
-          console.log(youtubeChannels)
+          // console.log(gnewsCategories)
+          // console.log(subRedditList)
+          // console.log(youtubeChannels)
 
           
           // const response : any = await axios.get(
@@ -203,7 +207,7 @@ app.get('/GNews', async (req, res) => {
 
           const news : any = await fetchNewsByCategory(gnewsCategories);
 
-          console.log(news)
+          //cconsole.log(news)
           
           res.status(200).json(news)
       })     
@@ -225,57 +229,46 @@ app.get('/Youtube', async (req, res) => {
               return
           }
 
-          const preferences = await db.query('SELECT * FROM preferences WHERE user_id = $1', [8])
 
-          if (preferences.rows.length === 0) {
-            res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
-            return
-          }
+          jwt.verify(token, "jwtkey", async (err, decoded) => { 
 
-          const youtubeChannels : any= preferences.rows[0].youtube
-  
-          const channelRes  = await axios.get<YouTubeChannelsResponse>(
-            `https://www.googleapis.com/youtube/v3/channels`,
-            {
-              params: {
-                part: 'contentDetails',
-                id: youtubeChannels[0].channelId,
-                key:YOUTUBE_API_KEY,
-              },
+            if (err) {
+              return res.status(403).json({ ServerErrorMsg: "Invalid token" });
             }
-          );
-      
-          const uploadsPlaylistId = channelRes.data?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-      
-          if (!uploadsPlaylistId) {
-            throw new Error('Unable to retrieve uploads playlist ID');
-          }
-        
-          const videosRes = await axios.get<YoutubePlaylist>(
-            `https://www.googleapis.com/youtube/v3/playlistItems`,
-            {
+            console.log(decoded)
+
+            const preferences = await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
+
+            if (preferences.rows.length === 0) {
+              res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
+              return
+            }
+  
+            const youtubeChannels : any= preferences.rows[0].youtube
+            const response = await axios.get<any>('https://www.googleapis.com/youtube/v3/search', {
               params: {
                 part: 'snippet',
-                playlistId: uploadsPlaylistId,
-                maxResults: 6,
+                channelId : youtubeChannels[0].channelId, 
+                maxResults: 5,
+                order: 'date',
+                type: 'video',
+                videoDuration: 'any', 
                 key: YOUTUBE_API_KEY,
               },
-            }
-          );
-   
+            });
+            //console.log(response.data.items)
+  
+            const videos =  response.data.items.map((item: any) => ({
+              channelTitle : youtubeChannels[0].title,
+              title: item.snippet.title,
+              publishedAt: item.snippet.publishedAt,
+              thumbnail: item.snippet.thumbnails.medium.url,
+              videoUrl : `https://www.youtube.com/watch?v=${item.id.videoId}`
+            }));
+  
+            res.status(200).json(videos)
 
-          const videos = videosRes.data.items.map((item: YouTubePlaylistItem) => {
-            const snippet = item.snippet;
-            return {
-              title: snippet.title,
-              publishedAt: snippet.publishedAt,
-              thumbnail: snippet.thumbnails.medium.url,
-              videoUrl: `https://www.youtube.com/watch?v=${snippet.resourceId.videoId}`,
-              channelTitle: snippet.channelTitle,
-            };
-          });
-          //console.log(videos)
-          res.status(200).json(videos)
+          })
         } 
         catch (err) {
             res.status(500).json({ServerErrorMsg: "Internal Server Error" })
@@ -286,29 +279,47 @@ app.get('/Youtube', async (req, res) => {
 
 app.get('/Youtube/channnelId/:handle', async (req, res) => {
   try {
-    const handle = req.params.handle;
 
-    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
-      params: {
-        part: 'snippet',
-        type: 'channel',
-        q: handle,
-        key: YOUTUBE_API_KEY,
-      },
-    });
+    const token = req.cookies?.jwt_token;
 
-    const channel = response.data.items?.[0];
-    if (channel) {
-      console.log(channel)
-      res.json({
-        channelId: channel.snippet.channelId,
-        title: channel.snippet.title,
-        icon : channel.snippet.thumbnails.default.url
-      });
-    } else {
-      res.status(404).json({ ServerErrorMsg: 'Channel not found' });
+    if (!token){
+        res.status(401).json({ ServerErrorMsg: "Not logged in" });
+        return
     }
-  } catch (e) {
+
+
+    jwt.verify(token, "jwtkey", async (err, decoded) => { 
+
+      if (err) {
+        return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+      }
+
+      const handle = req.params.handle;
+
+      const response = await axios.get<any>('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+          part: 'snippet',
+          type: 'channel',
+          q: handle,
+          key: YOUTUBE_API_KEY,
+        },
+      });
+
+      const channel = response.data.items?.[0];
+      if (channel) {
+        console.log(channel)
+        res.json({
+          channelId: channel.snippet.channelId,
+          title: channel.snippet.title,
+          icon : channel.snippet.thumbnails.default.url
+        });
+      } 
+      else {
+        res.status(404).json({ ServerErrorMsg: 'Channel not found' });
+      }
+    }) 
+  } 
+  catch (e) {
     console.error(e);
     res.status(500).json({ ServerErrorMsg: 'Internal Server Error' });
   }
@@ -405,15 +416,28 @@ app.get('/auth/verifyToken' , (req, res) => {
 
 app.get('/preferences', async (req, res) => {
   try{
-    
-    const user_id = 8
+
+    const token = req.cookies?.jwt_token;
+
+    if (!token){
+        res.status(401).json({ ServerErrorMsg: "Not logged in" });
+        return
+    }
+
+
+    jwt.verify(token, "jwtkey", async (err, decoded) => { 
+
+      if (err) {
+        return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+      }
    
-    const response = await db.query(
-      'SELECT * FROM preferences WHERE user_id = $1',
-      [user_id]
-    );
-    //console.log(response)
-    res.status(200).json(response.rows[0])
+      const response = await db.query(
+        'SELECT * FROM preferences WHERE user_id = $1',
+        [decoded.userId]
+      );
+     
+      res.status(200).json(response.rows[0])
+    })
     
   }
   catch(e) {
@@ -425,20 +449,36 @@ app.get('/preferences', async (req, res) => {
 
 app.put('/preferences', async (req, res) => {
   try{
-    
-    const { gnews, youtube, reddit } = req.body
-    const user_id = 8
-    console.log(gnews)
-    console.log(youtube)
-    console.log(reddit)
 
-    await db.query(
-      'UPDATE preferences set gnews = $1, youtube = $2, reddit = $3 WHERE user_id = $4',
-      [gnews, youtube, reddit, user_id]
-    );
 
-    res.status(200).json({message : "Topic added successful"})
+    const token = req.cookies?.jwt_token;
+
+    if (!token){
+        res.status(401).json({ ServerErrorMsg: "Not logged in" });
+        return
+    }
+
+
+    jwt.verify(token, "jwtkey", async (err, decoded) => { 
+
+        if (err) {
+          return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+        }
+
+        const { gnews, youtube, reddit } = req.body
+        const user_id = 8
+        console.log(gnews)
+        console.log(youtube)
+        console.log(reddit)
     
+        await db.query(
+          'UPDATE preferences set gnews = $1, youtube = $2, reddit = $3 WHERE user_id = $4',
+          [gnews, youtube, reddit, user_id]
+        );
+    
+        res.status(200).json({message : "Topic added successful"})
+      }
+    )
   }
   catch(e) {
     res.status(500).json({ServerErrorMsg: "Internal Server Error" })
@@ -450,3 +490,53 @@ app.put('/preferences', async (req, res) => {
 app.listen(8800, ()=> {
     console.log('connected to port 8800')
 })
+
+
+
+  // dont delete this (might need later in case if i need additional metadata)
+          // const channelRes  = await axios.get<YouTubeChannelsResponse>(
+          //   `https://www.googleapis.com/youtube/v3/channels`,
+          //   {
+          //     params: {
+          //       part: 'contentDetails',
+          //       id: youtubeChannels[0].channelId,
+          //       key:YOUTUBE_API_KEY,
+          //     },
+          //   }
+          // );
+      
+          // const uploadsPlaylistId = channelRes.data?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+      
+          // if (!uploadsPlaylistId) {
+          //   throw new Error('Unable to retrieve uploads playlist ID');
+          // }
+        
+          // const videosRes = await axios.get<YoutubePlaylist>(
+          //   `https://www.googleapis.com/youtube/v3/playlistItems`,
+          //   {
+          //     params: {
+          //       part: 'snippet',
+          //       playlistId: uploadsPlaylistId,
+          //       maxResults: 6,
+          //       order: 'date',
+          //       type: 'video',
+          //       videoDuration: 'medium', 
+          //       key: YOUTUBE_API_KEY,
+          //     },
+          //   }
+          // );
+          // const videos = response.data.items.map((item: YouTubePlaylistItem) => {
+          //   const snippet = item.snippet;
+          //   return {
+          //     title: snippet.title,
+          //     publishedAt: snippet.publishedAt,
+          //     thumbnail: snippet.thumbnails.medium.url,
+          //     videoUrl: `https://www.youtube.com/watch?v=${snippet.resourceId.videoId}`,
+          //     channelTitle: snippet.channelTitle,
+          //   };
+          // });
+          //console.log(videos)
+          // jwt.verify(token, "jwtkey", async (err, decoded) => { 
+            
+         // })
+         

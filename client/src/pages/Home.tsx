@@ -7,11 +7,20 @@ import {  useNavigate } from "react-router-dom";
 import '../styles/Home.scss'
 
 
+// interface YOUTUBE_VIDEO {
+//   channelTitle : string,
+//   publishedAt : string,
+//   thumbnail : string,
+//   title : string,
+//   videoUrl : string
+// }
+
+
 interface YOUTUBE_VIDEO {
   channelTitle : string,
+  title : string,
   publishedAt : string,
   thumbnail : string,
-  title : string,
   videoUrl : string
 }
 
@@ -106,7 +115,16 @@ export default function Home() {
                   {news[eachCategory].map((subNews : any, j) => (
                     <div key={j}>
                       <h3>{subNews.title}</h3>
-                      <img src={subNews.image} alt=""></img>
+                      <img 
+                        src={subNews.image} alt=""
+                         onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.onerror = null; 
+                            target.src = "No_image.png"; 
+                        }}
+                        >
+                      
+                      </img>
                       <a href={subNews.url} target="_blank" rel="noopener noreferrer"> read more</a> 
                     </div>  
                   ))}
