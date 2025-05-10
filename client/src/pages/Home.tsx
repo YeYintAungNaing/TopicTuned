@@ -25,6 +25,8 @@ interface YOUTUBE_VIDEO {
 }
 
 
+
+
 interface GNewsArticle {
   title: string;
   image: string;
@@ -40,7 +42,7 @@ export default function Home() {
 
   const {currentUser, isLoading} = useContext(GlobalState)!;
   const [news, setNews] = useState<GNewsList>({})
-  const [youtubeVideos, setYoutubeVideos]  = useState<YOUTUBE_VIDEO[]>([])
+  const [youtubeVideos, setYoutubeVideos]  = useState<Record<string, YOUTUBE_VIDEO[]>>({})
   const [topic, setTopic] = useState<string>("") 
   const navigate = useNavigate()
 
@@ -96,7 +98,7 @@ export default function Home() {
     }
   }, [isLoading, currentUser])
 
-
+  
   return (
 
     <div>
@@ -133,13 +135,20 @@ export default function Home() {
             )
           }
           {
-            youtubeVideos && youtubeVideos.length > 0 && (
-              youtubeVideos.map((eachVideo, i) => (
+            youtubeVideos && Object.keys(youtubeVideos).length > 0 && (
+              Object.keys(youtubeVideos).map((channelName, i) => (
                 <div key={i}>
-                  <img src={eachVideo.thumbnail} alt=""></img>
-                  <h3>{eachVideo.title}</h3>
-                  <div>{`By ${eachVideo.channelTitle}`}</div>
-                  <a href={eachVideo.videoUrl} target="_blank" rel="noopener noreferrer"> watch video</a>
+                  <h1>{channelName}</h1>
+                  {
+                    youtubeVideos[channelName].map((eachVideo, j) => (
+                      <div key={j}>
+                        <img src={eachVideo.thumbnail} alt=""></img>
+                        <h3>{eachVideo.title}</h3>
+                        <div>{`By ${eachVideo.channelTitle}`}</div>
+                        <a href={eachVideo.videoUrl} target="_blank" rel="noopener noreferrer"> watch video</a>
+                      </div>
+                    ))
+                  }
                 </div>
               ))
             )

@@ -6,6 +6,7 @@ import db from './db'
 import bcrypt from "bcrypt"
 import jwt,  { JwtPayload } from 'jsonwebtoken'
 import cookieParser from "cookie-parser"
+import { channel } from "diagnostics_channel";
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -42,6 +43,12 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
 // interface JWTDecoded extends JwtPayload {
 //   userId: number;
 // }
+
+interface YOUTUBE_CHANNEL {
+  channelId : string,
+  title : string
+  icon : string
+}
 
 const app = express()
 app.use(express.json())
@@ -158,7 +165,8 @@ async function fetchNewsByCategory(categories: string[]) {
 
     if (result.status === 'fulfilled') {
       newsByCategory[category] = result.value.data.articles;
-    } else {
+    } 
+    else {
       console.error(`Failed to fetch category "${category}":`, result.reason);
       newsByCategory[category] = []; 
     }
@@ -166,6 +174,48 @@ async function fetchNewsByCategory(categories: string[]) {
 
   return newsByCategory;
 };
+
+
+async function fetchVideosByChannel(channels : YOUTUBE_CHANNEL[]) {
+  //console.log(channels)
+  const promises = channels.map((channel) => 
+    axios.get('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+        part: 'snippet',
+        channelId : channel.channelId, 
+        maxResults: 2,
+        order: 'date',
+        type: 'video',
+        videoDuration: 'any', 
+        key: YOUTUBE_API_KEY,
+      },
+    })
+  )
+  
+  const results = await Promise.allSettled(promises)
+  const videosByChannel : Record<string, any[]> = {};
+  console.log(results)
+  results.forEach((result : any, index) => {
+    const channelName = channels[index].title
+
+    if (result.status === 'fulfilled') {
+      videosByChannel[channelName] = result.value.data.items.map((item: any) => ({
+          channelTitle : channelName,
+          title: item.snippet.title,
+          publishedAt: item.snippet.publishedAt,
+          thumbnail: item.snippet.thumbnails.medium.url,
+          videoUrl : `https://www.youtube.com/watch?v=${item.id.videoId}`
+      }));
+    }
+    else {
+      console.error(`Failed to fetch vidoes from "${channelName}":`, result.reason);
+      videosByChannel[channelName] = [];
+    }
+  })
+  return videosByChannel;
+
+}
+
 
 
 app.get('/GNews', async (req, res) => {
@@ -205,9 +255,9 @@ app.get('/GNews', async (req, res) => {
           //   `https://gnews.io/api/v4/top-headlines?category=${gnewsCategories[0]}y&lang=en&country=us&max=5&apikey=${GNEWS_API_KEY}`
           // )
 
-          const news : any = await fetchNewsByCategory(gnewsCategories);
+          const news : any =  await fetchNewsByCategory(gnewsCategories);
 
-          //cconsole.log(news)
+          //console.log(news)
           
           res.status(200).json(news)
       })     
@@ -244,28 +294,34 @@ app.get('/Youtube', async (req, res) => {
               return
             }
   
-            const youtubeChannels : any= preferences.rows[0].youtube
-            const response = await axios.get<any>('https://www.googleapis.com/youtube/v3/search', {
-              params: {
-                part: 'snippet',
-                channelId : youtubeChannels[0].channelId, 
-                maxResults: 5,
-                order: 'date',
-                type: 'video',
-                videoDuration: 'any', 
-                key: YOUTUBE_API_KEY,
-              },
-            });
-            //console.log(response.data.items)
+            //const youtubeChannels : any= preferences.rows[0].youtube
+            // const response = await axios.get<any>('https://www.googleapis.com/youtube/v3/search', {
+            //   params: {
+            //     part: 'snippet',
+            //     channelId : youtubeChannels[0].channelId, 
+            //     maxResults: 5,
+            //     order: 'date',
+            //     type: 'video',
+            //     videoDuration: 'any', 
+            //     key: YOUTUBE_API_KEY,
+            //   },
+            // });
+            // //console.log(response.data.items)
   
-            const videos =  response.data.items.map((item: any) => ({
-              channelTitle : youtubeChannels[0].title,
-              title: item.snippet.title,
-              publishedAt: item.snippet.publishedAt,
-              thumbnail: item.snippet.thumbnails.medium.url,
-              videoUrl : `https://www.youtube.com/watch?v=${item.id.videoId}`
-            }));
-  
+            // const videos =  response.data.items.map((item: any) => ({
+            //   channelTitle : youtubeChannels[0].title,
+            //   title: item.snippet.title,
+            //   publishedAt: item.snippet.publishedAt,
+            //   thumbnail: item.snippet.thumbnails.medium.url,
+            //   videoUrl : `https://www.youtube.com/watch?v=${item.id.videoId}`
+            // }));
+
+
+            const youtubeChannels : YOUTUBE_CHANNEL[]= preferences.rows[0].youtube
+
+            const videos = await fetchVideosByChannel(youtubeChannels)
+            console.log(videos)
+
             res.status(200).json(videos)
 
           })
