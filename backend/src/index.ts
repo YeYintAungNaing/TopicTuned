@@ -6,7 +6,6 @@ import db from './db'
 import bcrypt from "bcrypt"
 import jwt,  { JwtPayload } from 'jsonwebtoken'
 import cookieParser from "cookie-parser"
-import { channel } from "diagnostics_channel";
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -269,6 +268,42 @@ app.get('/GNews', async (req, res) => {
 })
 
 
+app.put('/preferences/gnews', async (req, res) => {
+  try{
+
+    const token = req.cookies?.jwt_token;
+
+    if (!token){
+        res.status(401).json({ ServerErrorMsg: "Not logged in" });
+        return
+    }
+
+
+    jwt.verify(token, "jwtkey", async (err, decoded) => { 
+
+        if (err) {
+          return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+        }
+
+        const gnews = req.body.gnews
+      
+        
+        await db.query(
+          'UPDATE preferences set gnews = $1 WHERE user_id = $2',
+          [ gnews, decoded.userId]
+        );
+    
+        res.status(200).json({message : "Prefenece deleted successfully successful"})
+      }
+    )
+  }
+  catch(e) {
+    res.status(500).json({ServerErrorMsg: "Internal Server Error" })
+    console.log(e)
+  }
+})
+
+
 app.get('/Youtube', async (req, res) => {
         try {
 
@@ -378,6 +413,41 @@ app.get('/Youtube/channnelId/:handle', async (req, res) => {
   catch (e) {
     console.error(e);
     res.status(500).json({ ServerErrorMsg: 'Internal Server Error' });
+  }
+})
+
+app.put('/preferences/youtube', async (req, res) => {
+  try{
+
+    const token = req.cookies?.jwt_token;
+
+    if (!token){
+        res.status(401).json({ ServerErrorMsg: "Not logged in" });
+        return
+    }
+
+
+    jwt.verify(token, "jwtkey", async (err, decoded) => { 
+
+        if (err) {
+          return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+        }
+
+        const youtube = req.body.youtube
+      
+        
+        await db.query(
+          'UPDATE preferences set youtube = $1 WHERE user_id = $2',
+          [ youtube, decoded.userId]
+        );
+    
+        res.status(200).json({message : "Prefenece deleted successfully successful"})
+      }
+    )
+  }
+  catch(e) {
+    res.status(500).json({ServerErrorMsg: "Internal Server Error" })
+    console.log(e)
   }
 })
 

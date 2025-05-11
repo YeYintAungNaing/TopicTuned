@@ -111,7 +111,7 @@ export default function Dashboard() {
   }, [])
 
 
-  async function getId() {   // for getting channel id to save in db
+  async function getChannelInfo() {   // for getting channel id to save in db
     const handle = channelInput.split("@")[1]
     //console.log(handle)
     
@@ -125,6 +125,64 @@ export default function Dashboard() {
       
     }
 
+    catch(e : any) {
+      if(e.response) {   
+        if(e.response.data.ServerErrorMsg) {  
+          console.log(e.response.data.ServerErrorMsg)  
+        }
+        else {
+          console.log(e.message)  
+        }
+      }
+      else{  
+        console.log(e.message)
+      } 
+    }
+  }
+
+  async function deleteChannel(channelTitle : string) {
+      let updatedChannels = [...youtubes]
+
+      updatedChannels = updatedChannels.filter((each) => each.title !== channelTitle)
+      console.log(updatedChannels)
+
+    try{
+      const response : any = await axios.put(`${API_BASE_URL}/preferences/youtube`, {
+        youtube : updatedChannels
+      })
+
+      console.log(response.data.message)
+      getPreferences()
+    }
+    catch(e : any) {
+      if(e.response) {   
+        if(e.response.data.ServerErrorMsg) {  
+          console.log(e.response.data.ServerErrorMsg)  
+        }
+        else {
+          console.log(e.message)  
+        }
+      }
+      else{  
+        console.log(e.message)
+      } 
+    }
+  }
+
+  async function deleteTopic(topic : string) {
+      let updatedTopic= [...gnewsTopics]
+
+      updatedTopic = updatedTopic.filter((each) => each !== topic)
+      //console.log(updatedTopic)
+
+    try{
+      const response : any = await axios.put(`${API_BASE_URL}/preferences/gnews`, {
+        gnews : updatedTopic
+      })
+
+      console.log(response.data.message)
+      getPreferences()
+    }
     catch(e : any) {
       if(e.response) {   
         if(e.response.data.ServerErrorMsg) {  
@@ -176,15 +234,28 @@ export default function Dashboard() {
        {
         isReady? (
           <div>
-              <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
-                    {TOPICS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-              </select>
               <button onClick={addTopic}>Update preferences</button>
-              
+              <div className="gnews">
+                <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
+                      {TOPICS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                </select>
+                {
+                  gnewsTopics && gnewsTopics.length > 0 ? (
+                    gnewsTopics.map((eachTopic, i) => (
+                      <div key={i}>
+                        <div>{eachTopic}</div>
+                        <button onClick={() => deleteTopic(eachTopic)}>Remove</button>
+                      </div>
+                    ))
+                  ) : (
+                    <div>You have not set any topic yet</div>
+                  )
+                }
+              </div>
               
               <div className="youtube">
                 {
@@ -193,6 +264,7 @@ export default function Dashboard() {
                       <div key={i}>
                         <h4>{eachChannel.title}</h4>
                         <img style={{width : "50px"}} src={eachChannel.icon} alt="" />
+                        <button onClick={() => deleteChannel(eachChannel.title)}>Remove</button>
                       </div>
                     ))
                   ) : (
@@ -206,7 +278,7 @@ export default function Dashboard() {
                   placeholder="channel link"
                 >
                 </input>
-                <button onClick={getId}>Search channel</button>
+                <button onClick={getChannelInfo}>Search channel</button>
                 {
                   selectedYoutubeChannel? (
                     <div>
