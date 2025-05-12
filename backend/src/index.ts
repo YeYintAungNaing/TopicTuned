@@ -4,7 +4,7 @@ import axios from 'axios'
 import 'dotenv/config';
 import db from './db'
 import bcrypt from "bcrypt"
-import jwt,  { JwtPayload } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import cookieParser from "cookie-parser"
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
@@ -355,7 +355,7 @@ app.get('/Youtube', async (req, res) => {
             const youtubeChannels : YOUTUBE_CHANNEL[]= preferences.rows[0].youtube
 
             const videos = await fetchVideosByChannel(youtubeChannels)
-            console.log(videos)
+            //console.log(videos)
 
             res.status(200).json(videos)
 
@@ -398,7 +398,7 @@ app.get('/Youtube/channnelId/:handle', async (req, res) => {
 
       const channel = response.data.items?.[0];
       if (channel) {
-        console.log(channel)
+        //console.log(channel)
         res.json({
           channelId: channel.snippet.channelId,
           title: channel.snippet.title,

@@ -43,7 +43,6 @@ export default function Home() {
   const {currentUser, isLoading} = useContext(GlobalState)!;
   const [news, setNews] = useState<GNewsList>({})
   const [youtubeVideos, setYoutubeVideos]  = useState<Record<string, YOUTUBE_VIDEO[]>>({})
-  const [topic, setTopic] = useState<string>("") 
   const navigate = useNavigate()
 
   //console.log(currentUser)
@@ -101,13 +100,16 @@ export default function Home() {
   
   return (
 
-    <div>
+    <div className="home">
       {
         currentUser && !isLoading ? (
           <div>
-          <input value={topic} placeholder="Enter your topic" onChange={(e) => {setTopic(e.target.value)}} type="text" />
-          <button onClick={fetchNews}>fetchGnews</button>
-          <button onClick={fetchYoutube}>fetchYt</button>
+          <div>
+            <h2>Home</h2>
+            <button onClick={fetchNews}>fetchGnews</button>
+            <button onClick={fetchYoutube}>fetchYt</button>
+          </div>
+          
           
           {
             news && Object.keys(news).length > 0 &&  (

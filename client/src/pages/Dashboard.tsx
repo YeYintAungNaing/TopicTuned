@@ -32,12 +32,12 @@ export default function Dashboard() {
 
   const [selectedTopic, setSelectedTopic] = useState<string>('general')
   const [selectedYoutubeChannel, setSelectedYoutubeChannel] = useState<YOUTUBE_CHANNEL | "">("")
-  const [selectedReddit, setSelectedReddit] = useState<SUBREDDIT| "">("")
+  //const [selectedReddit, setSelectedReddit] = useState<SUBREDDIT| "">("")
   const [gnewsTopics, setGnewsTopics] = useState<string[]>([])  // stored news category ["general", "technology"]
   const [reddits, setReddits] = useState<SUBREDDIT[]>([])  // subreddit names
   const [youtubes, setYoutubes] = useState<YOUTUBE_CHANNEL[]>([])  // channelid list
   const [channelInput, setChannelInput] = useState<string>('') // 
-  const [redditInput, setRedditInput] = useState<string>('')
+  //const [redditInput, setRedditInput] = useState<string>('')
   const [isReady, setIsReady] = useState<boolean>(false)
 
  
@@ -120,9 +120,7 @@ export default function Dashboard() {
 
       console.log(response.data.channelId, response.data.title )
 
-      setSelectedYoutubeChannel(response.data)
-
-      
+      setSelectedYoutubeChannel(response.data) 
     }
 
     catch(e : any) {
@@ -199,43 +197,44 @@ export default function Dashboard() {
   }
 
 
-  async function searchReddit() {   // for getting channel id to save in db
-    const subreddit = redditInput
-    //console.log(handle)
+  // async function searchReddit() {   // for getting channel id to save in db
+  //   const subreddit = redditInput
+  //   //console.log(handle)
     
-    try{
-      const response : any = await axios.get(`${API_BASE_URL}/reddit/${subreddit}`)
+  //   try{
+  //     const response : any = await axios.get(`${API_BASE_URL}/reddit/${subreddit}`)
 
-      console.log(response.data.channelId, response.data.title )
+  //     console.log(response.data.channelId, response.data.title )
 
-      setSelectedReddit(response.data)
+  //     setSelectedReddit(response.data)
 
       
-    }
+  //   }
 
-    catch(e : any) {
-      if(e.response) {   
-        if(e.response.data.ServerErrorMsg) {  
-          console.log(e.response.data.ServerErrorMsg)  
-        }
-        else {
-          console.log(e.message)  
-        }
-      }
-      else{  
-        console.log(e.message)
-      } 
-    }
-  }
+  //   catch(e : any) {
+  //     if(e.response) {   
+  //       if(e.response.data.ServerErrorMsg) {  
+  //         console.log(e.response.data.ServerErrorMsg)  
+  //       }
+  //       else {
+  //         console.log(e.message)  
+  //       }
+  //     }
+  //     else{  
+  //       console.log(e.message)
+  //     } 
+  //   }
+  // }
 
 
   return (
     <div>
        {
         isReady? (
-          <div>
-              <button onClick={addTopic}>Update preferences</button>
+          <div className="dashboard">
+              <h1>Dashboard</h1>
               <div className="gnews">
+                <p>Choose your news preferences here</p>
                 <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
                       {TOPICS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -246,42 +245,31 @@ export default function Dashboard() {
                 {
                   gnewsTopics && gnewsTopics.length > 0 ? (
                     gnewsTopics.map((eachTopic, i) => (
-                      <div key={i}>
+                      <div className="each-topic" key={i}>
                         <div>{eachTopic}</div>
-                        <button onClick={() => deleteTopic(eachTopic)}>Remove</button>
+                        <button className="remove-btn" onClick={() => deleteTopic(eachTopic)}>Remove</button>
                       </div>
                     ))
                   ) : (
-                    <div>You have not set any topic yet</div>
+                    <div className="empty">You have not set any topic yet</div>
                   )
                 }
               </div>
-              
               <div className="youtube">
-                {
-                  youtubes.length > 0 ? (
-                    youtubes.map((eachChannel, i) => (
-                      <div key={i}>
-                        <h4>{eachChannel.title}</h4>
-                        <img style={{width : "50px"}} src={eachChannel.icon} alt="" />
-                        <button onClick={() => deleteChannel(eachChannel.title)}>Remove</button>
-                      </div>
-                    ))
-                  ) : (
-                    <div>You have not added any channel yet</div>
-                  )
-                }
-
-                <input
-                  value={channelInput}
-                  onChange={(e) => {setChannelInput(e.target.value)}}
-                  placeholder="channel link"
-                >
-                </input>
-                <button onClick={getChannelInfo}>Search channel</button>
+                <p>Choose your favourite youtube channel here</p>
+                <div>
+                  <input
+                    value={channelInput}
+                    onChange={(e) => {setChannelInput(e.target.value)}}
+                    placeholder="channel link"
+                  >
+                  </input>
+                  <button className="search-btn" onClick={getChannelInfo}>Search channel</button>
+                  <button className="clear-btn" onClick={getChannelInfo}>Clear</button>
+                </div>
                 {
                   selectedYoutubeChannel? (
-                    <div>
+                    <div className="selectedChannel">
                       <img style={{width : "50px"}} src={selectedYoutubeChannel.icon} alt="" />
                       <h2> {selectedYoutubeChannel.title}</h2>
                     </div>
@@ -289,46 +277,68 @@ export default function Dashboard() {
                     <div>No youtube channel selected</div>
                   )
                 }
-              </div>
-              <div className="reddit">
                 {
-                  reddits.length > 0 ? (
-                    reddits.map((each, i) => (
-                      <div key={i}>
-                        <h4>{each.title}</h4>
-                        <img src={each.icon} alt="" />
-                      </div>
-                    ))
-                  ) : (
-                    <div>You have not added any subreddit yet</div>
-                  )
-                }
-
-                <input
-                  value={redditInput}
-                  onChange={(e) => {setRedditInput(e.target.value)}}
-                  placeholder="reddit name"
-                >
-                </input>
-                <button onClick={searchReddit}>Search channel</button>
-                {
-                  selectedReddit? (
-                    <div>
-                      <img style={{width : "50px"}} src={selectedReddit.icon} alt="" />
-                      <h2> {selectedReddit.title}</h2>
+                  youtubes.length > 0 ? (
+                    <div className="channels">
+                      {
+                        youtubes.map((eachChannel, i) => (
+                        <div className="eachChannel" key={i}>
+                          <h4>{eachChannel.title}</h4>
+                          <img src={eachChannel.icon} alt="" />
+                          <button className="remove-btn" onClick={() => deleteChannel(eachChannel.title)}>Remove</button>
+                        </div>
+                      ))
+                      }
                     </div>
                   ) : (
-                    <div>No reddit selected</div>
+                    <div className="empty">You have not added any channel yet</div>
                   )
                 }
+              </div> 
+              <div>
+                <button className="comfirm" onClick={addTopic}>Update preferences</button>  
               </div>
-             
         </div>
         ) : (
-          <div>Loading....</div>
+        <div>Loading....</div>
         )
        }
 
     </div>
   )
 }
+
+
+
+//  <div className="reddit">
+//                 {
+//                   reddits.length > 0 ? (
+//                     reddits.map((each, i) => (
+//                       <div key={i}>
+//                         <h4>{each.title}</h4>
+//                         <img src={each.icon} alt="" />
+//                       </div>
+//                     ))
+//                   ) : (
+//                     <div>You have not added any subreddit yet</div>
+//                   )
+//                 }
+
+//                 <input
+//                   value={redditInput}
+//                   onChange={(e) => {setRedditInput(e.target.value)}}
+//                   placeholder="reddit name"
+//                 >
+//                 </input>
+//                 <button onClick={searchReddit}>Search channel</button>
+//                 {
+//                   selectedReddit? (
+//                     <div>
+//                       <img style={{width : "50px"}} src={selectedReddit.icon} alt="" />
+//                       <h2> {selectedReddit.title}</h2>
+//                     </div>
+//                   ) : (
+//                     <div>No reddit selected</div>
+//                   )
+//                 }
+//               </div>
