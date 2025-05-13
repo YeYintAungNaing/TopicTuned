@@ -24,9 +24,6 @@ interface YOUTUBE_VIDEO {
   videoUrl : string
 }
 
-
-
-
 interface GNewsArticle {
   title: string;
   image: string;
@@ -90,6 +87,27 @@ export default function Home() {
     }   
   }
 
+  async function fetchGameSpot() {
+    try {
+      const newsData : any = await axios.get(`${API_BASE_URL}/gamespot`);
+      console.log(newsData.data)
+      
+    }
+    catch(e  : any) {
+      if(e.response) {   
+        if(e.response.data.ServerErrorMsg) {  
+          console.log(e.response.data.ServerErrorMsg)  
+        }
+        else {
+          console.log(e.message)  
+        }
+      }
+      else{  
+        console.log(e)
+      } 
+    }   
+  }
+
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
@@ -103,35 +121,37 @@ export default function Home() {
     <div className="home">
       {
         currentUser && !isLoading ? (
-          <div>
-          <div>
+          <div className="active-home">
+          <div className="header">
             <h2>Home</h2>
             <button onClick={fetchNews}>fetchGnews</button>
             <button onClick={fetchYoutube}>fetchYt</button>
+            <button onClick={fetchGameSpot}>fetchgames</button>
           </div>
-          
-          
+           
           {
             news && Object.keys(news).length > 0 &&  (
               Object.keys(news).map((eachCategory : string, i)=> (
-                <div key={i}>
+                <div className="eachContentCategory" key={i}>
                   <h1>{eachCategory}</h1>
-                  {news[eachCategory].map((subNews : any, j) => (
-                    <div key={j}>
+                  <div className="content-section">
+                    {news[eachCategory].map((subNews : any, j) => (
+                    <div className="content-card" key={j}>
                       <h3>{subNews.title}</h3>
                       <img 
                         src={subNews.image} alt=""
-                         onError={(e) => {
-                            const target = e.currentTarget as HTMLImageElement;
-                            target.onerror = null; 
-                            target.src = "No_image.png"; 
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.onerror = null; 
+                          target.src = "No_image.png"; 
                         }}
                         >
-                      
                       </img>
                       <a href={subNews.url} target="_blank" rel="noopener noreferrer"> read more</a> 
                     </div>  
                   ))}
+                  </div>
+                 
                 </div>
               ))
             )
@@ -139,18 +159,19 @@ export default function Home() {
           {
             youtubeVideos && Object.keys(youtubeVideos).length > 0 && (
               Object.keys(youtubeVideos).map((channelName, i) => (
-                <div key={i}>
+                <div className="eachContentCategory" key={i}>
                   <h1>{channelName}</h1>
+                  <div className="content-section">
                   {
                     youtubeVideos[channelName].map((eachVideo, j) => (
-                      <div key={j}>
+                      <div className="content-card" key={j}>
                         <img src={eachVideo.thumbnail} alt=""></img>
                         <h3>{eachVideo.title}</h3>
-                        <div>{`By ${eachVideo.channelTitle}`}</div>
                         <a href={eachVideo.videoUrl} target="_blank" rel="noopener noreferrer"> watch video</a>
                       </div>
                     ))
                   }
+                  </div>
                 </div>
               ))
             )

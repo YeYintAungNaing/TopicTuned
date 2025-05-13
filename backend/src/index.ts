@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser"
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
+const GAMESPOT_API_KEY = process.env.GAMESPOT_API_KEY;
 
 // interface YouTubeChannelsResponse {
 //   items: {
@@ -182,7 +183,7 @@ async function fetchVideosByChannel(channels : YOUTUBE_CHANNEL[]) {
         params: {
         part: 'snippet',
         channelId : channel.channelId, 
-        maxResults: 2,
+        maxResults: 4,
         order: 'date',
         type: 'video',
         videoDuration: 'any', 
@@ -449,6 +450,59 @@ app.put('/preferences/youtube', async (req, res) => {
     res.status(500).json({ServerErrorMsg: "Internal Server Error" })
     console.log(e)
   }
+})
+
+
+app.get('/gamespot', async (req, res) => {
+    try{
+
+      const token = req.cookies?.jwt_token;
+
+      if (!token){
+          res.status(401).json({ ServerErrorMsg: "Not logged in" });
+          return
+      }
+
+      jwt.verify(token, "jwtkey", async (err , decoded ) => {
+
+          if (err) {
+              return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+          }
+          
+
+       
+          // const categories = await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
+
+          // if (categories.rows.length === 0) {
+          //   return res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
+          // }
+
+          // const gnewsCategories : string[] = categories.rows[0].gnews 
+         
+       
+
+          // const news : any =  await fetchNewsByCategory(gnewsCategories);
+
+          const response = await axios.get<any>(`http://www.gamespot.com/api/articles/?api_key=${GAMESPOT_API_KEY}&limit=4&format=json&sort=publish_date:desc&category=games`)
+
+          //console.log(response.data)
+          
+
+          const gamesArticles = response.data.results.map((eachArticle : any) => ({
+              title : eachArticle.title,
+              url : eachArticle.site_detail_url,
+              date : eachArticle.publish_date,
+              image : eachArticle.image.original
+            }
+          ))
+          
+          res.status(200).json(gamesArticles)
+      })     
+    }
+    catch(e) {
+        res.status(500).json({ServerErrorMsg: "Internal Server Error" })
+        console.log(e)
+    }
 })
 
 
