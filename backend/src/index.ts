@@ -6,6 +6,7 @@ import db from './db'
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
 import cookieParser from "cookie-parser"
+import {redis} from './redisServer'
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -194,7 +195,7 @@ async function fetchVideosByChannel(channels : YOUTUBE_CHANNEL[]) {
   
   const results = await Promise.allSettled(promises)
   const videosByChannel : Record<string, any[]> = {};
-  console.log(results)
+  //console.log(results)
   results.forEach((result : any, index) => {
     const channelName = channels[index].title
 
@@ -321,7 +322,7 @@ app.get('/Youtube', async (req, res) => {
             if (err) {
               return res.status(403).json({ ServerErrorMsg: "Invalid token" });
             }
-            console.log(decoded)
+            //console.log(decoded)
 
             const preferences = await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
 
@@ -352,14 +353,32 @@ app.get('/Youtube', async (req, res) => {
             //   videoUrl : `https://www.youtube.com/watch?v=${item.id.videoId}`
             // }));
 
+           
 
             const youtubeChannels : YOUTUBE_CHANNEL[]= preferences.rows[0].youtube
+
+            const cachedData = await redis.get(`${decoded.userId}youtube${JSON.stringify(youtubeChannels)}`);
+
+            if (cachedData) {
+              const parsedCachedData = JSON.parse(cachedData);
+              res.status(200).json(parsedCachedData)
+              console.log('used cache data')
+              return 
+            }
+             console.log('no cache data')
 
             const videos = await fetchVideosByChannel(youtubeChannels)
             //console.log(videos)
 
             res.status(200).json(videos)
 
+            try {
+              //await redis.set('second', 'secondvalue')
+              await redis.set(`${decoded.userId}youtube${JSON.stringify(youtubeChannels)}`, JSON.stringify(videos))
+            }
+            catch(e) {
+              console.log('error from backend', e)
+            }
           })
         } 
         catch (err) {
@@ -469,34 +488,49 @@ app.get('/gamespot', async (req, res) => {
               return res.status(403).json({ ServerErrorMsg: "Invalid token" });
           }
           
+          const categories = await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
 
-       
-          // const categories = await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
+          if (categories.rows.length === 0) {
+            return res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
+          }
 
-          // if (categories.rows.length === 0) {
-          //   return res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
-          // }
-
-          // const gnewsCategories : string[] = categories.rows[0].gnews 
+          const getGamespotNews : Boolean = categories.rows[0].gamespot
          
        
+          if (getGamespotNews) {
 
-          // const news : any =  await fetchNewsByCategory(gnewsCategories);
+            const cachedData = await redis.get('gamespot');
 
-          const response = await axios.get<any>(`http://www.gamespot.com/api/articles/?api_key=${GAMESPOT_API_KEY}&limit=4&format=json&sort=publish_date:desc&category=games`)
-
-          //console.log(response.data)
-          
-
-          const gamesArticles = response.data.results.map((eachArticle : any) => ({
-              title : eachArticle.title,
-              url : eachArticle.site_detail_url,
-              date : eachArticle.publish_date,
-              image : eachArticle.image.original
+            if (cachedData) {
+              const parsedCachedData = JSON.parse(cachedData);
+              res.status(200).json(parsedCachedData)
+              return 
             }
-          ))
-          
-          res.status(200).json(gamesArticles)
+            
+
+            const response = await axios.get<any>(`http://www.gamespot.com/api/articles/?api_key=${GAMESPOT_API_KEY}&limit=4&format=json&sort=publish_date:desc&category=games`)
+
+            const gamesArticles = response.data.results.map((eachArticle : any) => ({
+                title : eachArticle.title,
+                url : eachArticle.site_detail_url,
+                date : eachArticle.publish_date,
+                image : eachArticle.image.original
+              }
+            ))
+     
+            res.status(200).json(gamesArticles)
+            
+            try {
+              //await redis.set('second', 'secondvalue')
+              await redis.set('gamespot', JSON.stringify(gamesArticles))
+            }
+            catch(e) {
+              console.log('error from backend', e)
+            }
+          }
+          else {
+            res.status(200).json()
+          }   
       })     
     }
     catch(e) {
@@ -630,7 +664,6 @@ app.get('/preferences', async (req, res) => {
 app.put('/preferences', async (req, res) => {
   try{
 
-
     const token = req.cookies?.jwt_token;
 
     if (!token){
@@ -645,21 +678,22 @@ app.put('/preferences', async (req, res) => {
           return res.status(403).json({ ServerErrorMsg: "Invalid token" });
         }
 
-        const { gnews, youtube, reddit } = req.body
-        const user_id = 8
-        console.log(gnews)
-        console.log(youtube)
-        console.log(reddit)
-    
+        const { gnews, youtube, devNews, gamespot } = req.body
+        
+        // console.log(gnews)
+        // console.log(devNews)
+        // console.log(gamespot)
+
         await db.query(
-          'UPDATE preferences set gnews = $1, youtube = $2, reddit = $3 WHERE user_id = $4',
-          [gnews, youtube, reddit, user_id]
+          'UPDATE preferences set gnews = $1, youtube = $2, dev_news = $3, gamespot = $4 WHERE user_id = $5',
+          [gnews, youtube, devNews, gamespot ,decoded.userId]
         );
     
         res.status(200).json({message : "Topic added successful"})
       }
     )
   }
+
   catch(e) {
     res.status(500).json({ServerErrorMsg: "Internal Server Error" })
     console.log(e)

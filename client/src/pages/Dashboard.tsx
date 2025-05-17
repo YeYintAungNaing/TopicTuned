@@ -34,10 +34,12 @@ export default function Dashboard() {
   const [selectedYoutubeChannel, setSelectedYoutubeChannel] = useState<YOUTUBE_CHANNEL | "">("")
   //const [selectedReddit, setSelectedReddit] = useState<SUBREDDIT| "">("")
   const [gnewsTopics, setGnewsTopics] = useState<string[]>([])  // stored news category ["general", "technology"]
-  const [reddits, setReddits] = useState<SUBREDDIT[]>([])  // subreddit names
+  //const [reddits, setReddits] = useState<SUBREDDIT[]>([])  // subreddit names
+  const [devNews, setDevNews] = useState<SUBREDDIT[]>([])
   const [youtubes, setYoutubes] = useState<YOUTUBE_CHANNEL[]>([])  // channelid list
   const [channelInput, setChannelInput] = useState<string>('') // 
   //const [redditInput, setRedditInput] = useState<string>('')
+  const [getGamespot, setGetGamespot] = useState<boolean>(false)
   const [isReady, setIsReady] = useState<boolean>(false)
 
  
@@ -57,8 +59,9 @@ export default function Dashboard() {
     try{
       const response : any = await axios.put(`${API_BASE_URL}/preferences`, {
         gnews : updatedTopics,
-        reddit : reddits,
-        youtube : updatedChannels
+        devNews : devNews,
+        youtube : updatedChannels,
+        gamespot : getGamespot
       })
       console.log(response.data.message)
       getPreferences()
@@ -86,8 +89,10 @@ export default function Dashboard() {
     try{
       const response : any = await axios.get(`${API_BASE_URL}/preferences`)
       setGnewsTopics(response.data.gnews)
-      setReddits(response.data.reddit)
+      //setReddits(response.data.reddit)
+      setDevNews(response.data.dev_news)
       setYoutubes(response.data.youtube)
+      setGetGamespot(response.data.gamespot)
       setIsReady(true)
     }
   
@@ -254,6 +259,9 @@ export default function Dashboard() {
                     <div className="empty">You have not set any topic yet</div>
                   )
                 }
+                <div>
+                  <button onClick={() => setGetGamespot(!getGamespot)}>{`Get game news : ${getGamespot}`}</button>
+                </div>
               </div>
               <div className="youtube">
                 <p>Choose your favourite youtube channel here</p>
@@ -307,8 +315,6 @@ export default function Dashboard() {
     </div>
   )
 }
-
-
 
 //  <div className="reddit">
 //                 {

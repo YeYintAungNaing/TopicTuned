@@ -34,12 +34,20 @@ interface GNewsList {
   [category: string]: GNewsArticle[];
 };
 
+interface GamespotNews {
+  title : string,
+  url : string,
+  date : string,
+  image : string
+}
+
 
 export default function Home() {
 
   const {currentUser, isLoading} = useContext(GlobalState)!;
   const [news, setNews] = useState<GNewsList>({})
   const [youtubeVideos, setYoutubeVideos]  = useState<Record<string, YOUTUBE_VIDEO[]>>({})
+  const [gamespotNews, setGamespotNews] = useState<GamespotNews[]>([])
   const navigate = useNavigate()
 
   //console.log(currentUser)
@@ -90,7 +98,8 @@ export default function Home() {
   async function fetchGameSpot() {
     try {
       const newsData : any = await axios.get(`${API_BASE_URL}/gamespot`);
-      console.log(newsData.data)
+      //console.log(newsData.data)
+      setGamespotNews(newsData.data)
       
     }
     catch(e  : any) {
@@ -147,6 +156,7 @@ export default function Home() {
                         }}
                         >
                       </img>
+                      <div>{subNews.publishedAt}</div>
                       <a href={subNews.url} target="_blank" rel="noopener noreferrer"> read more</a> 
                     </div>  
                   ))}
@@ -165,8 +175,9 @@ export default function Home() {
                   {
                     youtubeVideos[channelName].map((eachVideo, j) => (
                       <div className="content-card" key={j}>
-                        <img src={eachVideo.thumbnail} alt=""></img>
                         <h3>{eachVideo.title}</h3>
+                        <img src={eachVideo.thumbnail} alt=""></img>
+                        <div>{eachVideo.publishedAt}</div>
                         <a href={eachVideo.videoUrl} target="_blank" rel="noopener noreferrer"> watch video</a>
                       </div>
                     ))
@@ -176,7 +187,25 @@ export default function Home() {
               ))
             )
           }
-         
+          {
+            gamespotNews && gamespotNews.length > 0 &&  (
+              <div className="eachContentCategory">
+                <h1>Gamespot news</h1>
+                <div className="content-section">
+                  {
+                    gamespotNews.map((eachNews : GamespotNews, i)=> (
+                      <div key={i} className="content-card">
+                        <h3>{eachNews.title}</h3>
+                        <img src={eachNews.image} alt=""></img>
+                        <div>{eachNews.date}</div>
+                        <a href={eachNews.url} target="_blank" rel="noopener noreferrer"> watch video</a>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>   
+            )
+          }
         </div>
         ) : (
         <div>Loading ....</div>
