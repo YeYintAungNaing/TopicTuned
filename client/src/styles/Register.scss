@@ -2,7 +2,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 80vh;
+    height: 90vh;
     
 
     p{
@@ -25,8 +25,8 @@
         outline: none;     
     }
     input:focus{
-        border-color:  rgb(100, 139, 211);
-        box-shadow: 0 0 5px  rgb(100, 139, 211);    
+        border-color:  rgb(63, 145, 90);
+        box-shadow: 0 0 5px  rgb(63, 145, 90); 
     }
 
     button{
@@ -35,7 +35,7 @@
         font-size: 16px;
         border: 0px;
         color: white;
-        background-color: rgb(47, 108, 223);
+         background-color: rgb(63, 145, 90);
 
         &:hover{
             cursor: pointer;
@@ -49,16 +49,16 @@
 
     .login{
         background-color:white;
-        color: rgb(100, 139, 211);
-        border: solid 1px  rgb(47, 108, 223);
-        
+        color:rgb(63, 145, 90);
+        border: solid 1px rgb(63, 145, 90);
+             
     }
 
 
     .register-card{
         height: 400px;
         width: 370px;
-        background-color: aliceblue;
+        background-color: rgb(229, 245, 239);
         display: flex;
         justify-content: center;
         flex-direction: column;

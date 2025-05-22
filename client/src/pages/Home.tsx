@@ -117,6 +117,13 @@ export default function Home() {
     }   
   }
 
+  function getFormattedTime(time : string) {
+    
+    const formattedTime = new Date(time);
+
+    return formattedTime.toLocaleString();
+  }
+
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
@@ -152,12 +159,14 @@ export default function Home() {
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
                           target.onerror = null; 
-                          target.src = "No_image.png"; 
+                          target.src = "No_image.jpg"; 
                         }}
                         >
                       </img>
-                      <div>{subNews.publishedAt}</div>
-                      <a href={subNews.url} target="_blank" rel="noopener noreferrer"> read more</a> 
+                      <div>{getFormattedTime(subNews.publishedAt)}</div>
+                      <button className="link-btn">
+                        <a href={subNews.url} target="_blank" rel="noopener noreferrer"> read more</a> 
+                      </button>  
                     </div>  
                   ))}
                   </div>
@@ -176,9 +185,17 @@ export default function Home() {
                     youtubeVideos[channelName].map((eachVideo, j) => (
                       <div className="content-card" key={j}>
                         <h3>{eachVideo.title}</h3>
-                        <img src={eachVideo.thumbnail} alt=""></img>
-                        <div>{eachVideo.publishedAt}</div>
-                        <a href={eachVideo.videoUrl} target="_blank" rel="noopener noreferrer"> watch video</a>
+                        <img src={eachVideo.thumbnail} alt=""
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.onerror = null; 
+                          target.src = "No_image.jpg"; 
+                        }}
+                        ></img>
+                        <div>{getFormattedTime(eachVideo.publishedAt)}</div>
+                        <button className="link-btn">
+                          <a href={eachVideo.videoUrl} target="_blank" rel="noopener noreferrer"> watch video</a>
+                        </button>
                       </div>
                     ))
                   }
@@ -196,9 +213,17 @@ export default function Home() {
                     gamespotNews.map((eachNews : GamespotNews, i)=> (
                       <div key={i} className="content-card">
                         <h3>{eachNews.title}</h3>
-                        <img src={eachNews.image} alt=""></img>
+                        <img src={eachNews.image} alt=""
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.onerror = null; 
+                          target.src = "No_image.jpg"; 
+                        }}
+                        ></img>
                         <div>{eachNews.date}</div>
-                        <a href={eachNews.url} target="_blank" rel="noopener noreferrer"> watch video</a>
+                        <button className="link-btn">
+                          <a href={eachNews.url} target="_blank" rel="noopener noreferrer"> Read more</a>
+                        </button> 
                       </div>
                     ))
                   }

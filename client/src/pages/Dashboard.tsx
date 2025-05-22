@@ -278,7 +278,12 @@ export default function Dashboard() {
                 {
                   selectedYoutubeChannel? (
                     <div className="selectedChannel">
-                      <img style={{width : "50px"}} src={selectedYoutubeChannel.icon} alt="" />
+                      <img style={{width : "50px"}} src={selectedYoutubeChannel.icon} alt="" 
+                        onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.onerror = null; 
+                            target.src = "No_image.jpg"; 
+                          }}/>
                       <h2> {selectedYoutubeChannel.title}</h2>
                     </div>
                   ) : (
@@ -292,7 +297,12 @@ export default function Dashboard() {
                         youtubes.map((eachChannel, i) => (
                         <div className="eachChannel" key={i}>
                           <h4>{eachChannel.title}</h4>
-                          <img src={eachChannel.icon} alt="" />
+                          <img src={eachChannel.icon} alt="" 
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.onerror = null; 
+                              target.src = "No_image.jpg"; 
+                            }}/>
                           <button className="remove-btn" onClick={() => deleteChannel(eachChannel.title)}>Remove</button>
                         </div>
                       ))

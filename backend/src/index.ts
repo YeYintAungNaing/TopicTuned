@@ -218,7 +218,6 @@ async function fetchVideosByChannel(channels : YOUTUBE_CHANNEL[]) {
 }
 
 
-
 app.get('/GNews', async (req, res) => {
     try{
 
@@ -243,7 +242,7 @@ app.get('/GNews', async (req, res) => {
             return res.status(404).json({ ServerErrorMsg: "Corrupted user preference data" });
           }
 
-          const gnewsCategories : string[] = categories.rows[0].gnews 
+          
           // const subRedditList : string[] = categories.rows[0].reddit 
           // const youtubeChannels : string[] = categories.rows[0].youtube
 
@@ -256,11 +255,35 @@ app.get('/GNews', async (req, res) => {
           //   `https://gnews.io/api/v4/top-headlines?category=${gnewsCategories[0]}y&lang=en&country=us&max=5&apikey=${GNEWS_API_KEY}`
           // )
 
-          const news : any =  await fetchNewsByCategory(gnewsCategories);
 
-          //console.log(news)
+          const gnewsCategories : string[] = categories.rows[0].gnews 
+
+          const cachedData = await redis.get(`${decoded.userId}gnews${JSON.stringify(gnewsCategories)}`);
+
+          if (cachedData) {
+            const parsedCachedData = JSON.parse(cachedData);
+            res.status(200).json(parsedCachedData)
+            console.log('used cache data')
+            return 
+          }
+          console.log('no cache data')
+
+          const news : any =  await fetchNewsByCategory(gnewsCategories);
           
           res.status(200).json(news)
+
+          if (Object.keys(news).length > 0) {
+            try {
+              await redis.set(
+                `${decoded.userId}gnews${JSON.stringify(gnewsCategories)}`, 
+                JSON.stringify(news),
+                'EX', 7200
+              )
+            }
+            catch(e) {
+              console.log('caching error from backend', e)
+            } 
+          }
       })     
     }
     catch(e) {
@@ -357,7 +380,9 @@ app.get('/Youtube', async (req, res) => {
 
             const youtubeChannels : YOUTUBE_CHANNEL[]= preferences.rows[0].youtube
 
-            const cachedData = await redis.get(`${decoded.userId}youtube${JSON.stringify(youtubeChannels)}`);
+            const channelNames = youtubeChannels.map((each)=> each.title)
+
+            const cachedData = await redis.get(`${decoded.userId}youtube${JSON.stringify(channelNames)}`);
 
             if (cachedData) {
               const parsedCachedData = JSON.parse(cachedData);
@@ -372,13 +397,18 @@ app.get('/Youtube', async (req, res) => {
 
             res.status(200).json(videos)
 
-            try {
-              //await redis.set('second', 'secondvalue')
-              await redis.set(`${decoded.userId}youtube${JSON.stringify(youtubeChannels)}`, JSON.stringify(videos))
-            }
-            catch(e) {
-              console.log('error from backend', e)
-            }
+            if (Object.keys(videos).length > 0) {
+               try {
+                   await redis.set(
+                      `${decoded.userId}youtube${JSON.stringify(channelNames)}`, 
+                      JSON.stringify(videos), 
+                      'EX', 7200
+                    )
+                }
+                catch(e) {
+                  console.log('error from backend', e)
+                } 
+            }         
           })
         } 
         catch (err) {
@@ -504,9 +534,11 @@ app.get('/gamespot', async (req, res) => {
             if (cachedData) {
               const parsedCachedData = JSON.parse(cachedData);
               res.status(200).json(parsedCachedData)
+              console.log('userd cache data')
               return 
             }
             
+            console.log('no cache data')
 
             const response = await axios.get<any>(`http://www.gamespot.com/api/articles/?api_key=${GAMESPOT_API_KEY}&limit=4&format=json&sort=publish_date:desc&category=games`)
 
@@ -519,14 +551,15 @@ app.get('/gamespot', async (req, res) => {
             ))
      
             res.status(200).json(gamesArticles)
-            
-            try {
-              //await redis.set('second', 'secondvalue')
-              await redis.set('gamespot', JSON.stringify(gamesArticles))
-            }
-            catch(e) {
-              console.log('error from backend', e)
-            }
+
+            if (gamesArticles.length > 0) {
+               try {
+                  await redis.set('gamespot', JSON.stringify(gamesArticles), 'EX', 7200)
+                }
+                catch(e) {
+                  console.log('error from backend', e)
+                }
+            }   
           }
           else {
             res.status(200).json()
