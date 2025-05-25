@@ -19,50 +19,124 @@
         }
     }
    
-
-    .gnews {
+    .upper-section{
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        
-        justify-content: center;
-        border: solid 1px;
-        padding: 10px;
+        flex-direction: row;
+        gap: 20px;
+        width: 100%;
 
-        p {
-            margin-bottom: 10px;
+        .edit-profile {
+            flex: 3;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: solid 1px;
+            padding: 10px;
+            position: relative;
 
-        }
-
-        select{
-            width: 170px;
-            height: 33px;
-            padding-left: 7px;  
-            border: 1px solid;
-            border-radius: 5px;
-            font-size: 16px; 
-            margin-bottom: 14px;
-        }
-
-        .each-topic {
-            width: 170px;
-            
-            display: flex;
-            
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-
-             
-            button{
-                height: 24px;
+            p{
+                size: 20px;
+                margin-bottom: 5px;
             }
-            
-        }
-    }
 
+            .profile-input{
+
+                width: 70%;
+                max-width: 400px;
+                height: 35px;
+                padding-left: 7px;
+                
+                border: 1px solid;
+            
+                border-radius: 5px;
+                font-size: 16px;  
+                outline: none; 
+                margin-bottom: 10px;    
+            }
+
+            .profile-input:focus{
+                border-color: green;
+                box-shadow: 0 0 5px green;    
+            }
+
+            
+            .btn-container{
+                width: 70%;
+                max-width: 400px;
+                position: absolute;
+                bottom: 10px;
+                display: flex;
+                justify-content: space-between;
+                
+                
+                button{
+        
+                    height: 35px;
+                    font-size: 16px;
+                    border: 0px;
+                    
+                    font-weight: 200;
+                    background-color:  rgb(63, 145, 90);
+                    color: white;
+
+                    &:hover{
+                        cursor: pointer;
+                        transform: scale(1.05);
+                    }
+                }
+            }   
+        }
+
+        .gnews {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            
+            justify-content: center;
+            border: solid 1px;
+            padding: 10px;
+
+            p {
+                margin-bottom: 10px;
+
+            }
+
+            select{
+                width: 170px;
+                height: 33px;
+                padding-left: 7px;  
+                border: 1px solid;
+                border-radius: 5px;
+                font-size: 16px; 
+                margin-bottom: 14px;
+            }
+
+            .each-topic {
+                width: 170px;
+                
+                display: flex;
+                
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 10px;
+
+                
+                button{
+                    height: 24px;
+                }
+                
+            }
+            .gamespot-btn {
+                margin-top: 5px;
+                height: 30px;
+                background-color:  rgb(63, 145, 90);
+                color: white;
+            }
+        }
+
+    }
 
     .youtube {
         display: flex;
@@ -78,33 +152,38 @@
            margin: 10px 0; 
         }
 
-        input{
-            width: 400px;
-            height: 35px;
-            padding-left: 7px;    
-            border: 1px solid;  
-            border-radius: 5px;
-            font-size: 16px;  
-            outline: none;     
-        }
-        input:focus{
-            border-color:  rgb(25, 131, 7);
-            box-shadow: 0 0 5px  rgb(1, 89, 30);    
-        }
+        .youtube-search{
+            display: flex;
+            flex-direction: row;
+            
+             input{
+                width: 400px;
+                height: 35px;
+                padding-left: 7px;    
+                border: 1px solid;  
+                border-radius: 5px;
+                font-size: 16px;  
+                outline: none;     
+            }
+            input:focus{
+                border-color:  rgb(25, 131, 7);
+                box-shadow: 0 0 5px  rgb(1, 89, 30);    
+            }
 
-        .search-btn{
-            background-color: rgb(25, 131, 7);
-            color: white;
-            height: 35px;
-            border-radius: 10px;
-            margin: 0 3px;
-        }
+            .search-btn{
+                background-color:rgb(63, 145, 90);
+                color: white;
+                height: 35px;
+                border-radius: 10px;
+                margin: 0 3px;
+            }
 
-        .clear-btn {
-            background-color: rgb(168, 13, 13);
-            color: white;
-            height: 35px;   
-            border-radius: 10px;
+            .clear-btn {
+                background-color: rgb(168, 13, 13);
+                color: white;
+                height: 35px;   
+                border-radius: 10px;
+            }
         }
 
         .channels {
@@ -162,7 +241,7 @@
         font-size: 16px;
         border: 0px;
         color: white;
-        background-color: rgb(25, 131, 7);
+        background-color:rgb(63, 145, 90);
 
         &:hover{
             cursor: pointer;

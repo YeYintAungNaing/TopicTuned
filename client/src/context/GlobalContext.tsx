@@ -46,7 +46,6 @@ export const GlobalContext = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  console.log(currentUser)
   useEffect(() => {
     verifyUser()
   }, [])
@@ -57,7 +56,8 @@ export const GlobalContext = ({ children }: { children: React.ReactNode }) => {
         currentUser, 
         setCurrentUser,
         isLoading, 
-        setIsLoading
+        setIsLoading,
+        verifyUser
       }}>
       {children}
     </GlobalState.Provider>

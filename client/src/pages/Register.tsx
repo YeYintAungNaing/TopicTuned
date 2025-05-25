@@ -66,6 +66,7 @@ export default function Register() {
                 >
             </input>
             <input 
+                type="password"
                 placeholder="Password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -75,7 +76,6 @@ export default function Register() {
             <Link className="links" to='/login'>
               <button className="login">Login into existing account ?</button>
             </Link>
-            
           </div>
         </div>
     )

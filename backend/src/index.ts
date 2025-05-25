@@ -143,10 +143,16 @@ app.post("/auth/login", async (req, res) => {
   }
 })
 
+function delay(ms : number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 
 async function fetchNewsByCategory(categories: string[]) {
-  const promises = categories.map((category) =>
-    axios.get(`https://gnews.io/api/v4/top-headlines`, {
+  const promises = categories.map(async (category) =>
+  {
+    await delay(1000)
+    return axios.get(`https://gnews.io/api/v4/top-headlines`, {
       params: {
         category,
         lang: 'en',
@@ -155,6 +161,8 @@ async function fetchNewsByCategory(categories: string[]) {
         apikey: GNEWS_API_KEY,
       },
     })
+  }
+      
   );
 
   const results = await Promise.allSettled(promises);
@@ -731,6 +739,21 @@ app.put('/preferences', async (req, res) => {
     res.status(500).json({ServerErrorMsg: "Internal Server Error" })
     console.log(e)
   }
+})
+
+
+app.post('/auth/logout', (req, res) => {
+
+    try{
+        res.clearCookie("jwt_token",{
+            sameSite:"none",
+            secure:true
+          }).status(200).json({message : "User has been logged out"})
+    }
+    catch(e) {
+        res.status(500).json({ServerErrorMsg : "Internal Server Error"})
+        console.log(e)
+    } 
 })
 
 

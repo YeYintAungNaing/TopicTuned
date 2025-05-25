@@ -127,24 +127,23 @@ export default function Home() {
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
-      navigate('/login')
+      navigate('/login')   
     }
-  }, [isLoading, currentUser])
+    else if (currentUser) {
+      fetchNews()
+      fetchYoutube()
+      fetchGameSpot()
+    }
+    
+  }, [ isLoading, currentUser])
 
-  
+  console.log(currentUser)
   return (
 
     <div className="home">
       {
         currentUser && !isLoading ? (
-          <div className="active-home">
-          <div className="header">
-            <h2>Home</h2>
-            <button onClick={fetchNews}>fetchGnews</button>
-            <button onClick={fetchYoutube}>fetchYt</button>
-            <button onClick={fetchGameSpot}>fetchgames</button>
-          </div>
-           
+          <div className="active-home">  
           {
             news && Object.keys(news).length > 0 &&  (
               Object.keys(news).map((eachCategory : string, i)=> (
@@ -218,7 +217,7 @@ export default function Home() {
                           const target = e.currentTarget as HTMLImageElement;
                           target.onerror = null; 
                           target.src = "No_image.jpg"; 
-                        }}
+                        }}                     
                         ></img>
                         <div>{eachNews.date}</div>
                         <button className="link-btn">

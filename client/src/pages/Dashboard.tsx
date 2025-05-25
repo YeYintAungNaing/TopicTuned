@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { API_BASE_URL } from "../config";
 import axios from 'axios'
 import "../styles/Dashboard.scss"
+import { GlobalState } from "../context/GlobalState";
+import emailValidator from 'email-validator'; 
+
 
 const TOPICS = [
   { label: "General", value: "general" },
@@ -30,6 +33,13 @@ interface SUBREDDIT {
 
 export default function Dashboard() {
 
+  const {currentUser} = useContext(GlobalState)!;
+
+  const [userName, setUserName] =useState(currentUser?.user_name || '') 
+  
+  const [email, setEmail] =useState(currentUser?.email || '') 
+  const [validEmail, setValidEmail] = useState("Empty")
+
   const [selectedTopic, setSelectedTopic] = useState<string>('general')
   const [selectedYoutubeChannel, setSelectedYoutubeChannel] = useState<YOUTUBE_CHANNEL | "">("")
   //const [selectedReddit, setSelectedReddit] = useState<SUBREDDIT| "">("")
@@ -41,6 +51,34 @@ export default function Dashboard() {
   //const [redditInput, setRedditInput] = useState<string>('')
   const [getGamespot, setGetGamespot] = useState<boolean>(false)
   const [isReady, setIsReady] = useState<boolean>(false)
+
+  function changeProfileDetails() {
+        
+        if(validEmail !== "Empty") {
+            if(!validEmail) {
+                console.log('Invalid email')
+                return
+            }
+        }
+        editProfile()
+  }
+
+  function changeEmail(e) {
+      const v = e.target.value
+      setEmail(v)
+      if (emailValidator.validate(v)) {
+          //console.log('valid')
+          setValidEmail(true)
+      }
+      else{
+          setValidEmail(false)
+          //console.log('not valid')
+      }
+  }
+
+  function editProfile() {
+    console.log('d')
+  }
 
  
   async function addTopic() {
@@ -238,43 +276,61 @@ export default function Dashboard() {
         isReady? (
           <div className="dashboard">
               <h1>Dashboard</h1>
-              <div className="gnews">
-                <p>Choose your news preferences here</p>
-                <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
-                      {TOPICS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                </select>
-                {
-                  gnewsTopics && gnewsTopics.length > 0 ? (
-                    gnewsTopics.map((eachTopic, i) => (
-                      <div className="each-topic" key={i}>
-                        <div>{eachTopic}</div>
-                        <button className="remove-btn" onClick={() => deleteTopic(eachTopic)}>Remove</button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="empty">You have not set any topic yet</div>
-                  )
-                }
-                <div>
-                  <button onClick={() => setGetGamespot(!getGamespot)}>{`Get game news : ${getGamespot}`}</button>
+              <div className="upper-section">
+                <div className="edit-profile">
+                  <div>
+                    <p>Name</p>
+                    <input className="profile-input" value={userName} onChange={(e) => setUserName(e.target.value) }></input>
+                  </div>
+                  <div>
+                    <p>Email</p>
+                    <input className="profile-input" value={email} onChange={ changeEmail } ></input>
+                  </div>
+                  <div>{`Account created at ${currentUser?.created_at}`}</div>
+                  <div className="btn-container">
+                      <button onClick={changeProfileDetails}>Change profile</button>
+                      <button onClick={changeProfileDetails}>Reset password</button>
+                  </div>    
+                </div>
+                <div className="gnews">
+                  <p>Choose your news preferences here</p>
+                  <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
+                        {TOPICS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                  </select>
+                  {
+                    gnewsTopics && gnewsTopics.length > 0 ? (
+                      gnewsTopics.map((eachTopic, i) => (
+                        <div className="each-topic" key={i}>
+                          <div>{eachTopic}</div>
+                          <button className="remove-btn" onClick={() => deleteTopic(eachTopic)}>Remove</button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="empty">You have not set any topic yet</div>
+                    )
+                  }
+          
+                  <button className="gamespot-btn" onClick={() => setGetGamespot(!getGamespot)}>{`Get game news : ${getGamespot}`}</button>
                 </div>
               </div>
               <div className="youtube">
                 <p>Choose your favourite youtube channel here</p>
-                <div>
-                  <input
-                    value={channelInput}
-                    onChange={(e) => {setChannelInput(e.target.value)}}
-                    placeholder="channel link"
-                  >
-                  </input>
-                  <button className="search-btn" onClick={getChannelInfo}>Search channel</button>
-                  <button className="clear-btn" onClick={getChannelInfo}>Clear</button>
-                </div>
+                  <div className="youtube-search">
+                    <input
+                      value={channelInput}
+                      onChange={(e) => {setChannelInput(e.target.value)}}
+                      placeholder="channel link"
+                    >
+                    </input>
+                    <div>
+                      <button className="search-btn" onClick={getChannelInfo}>Search channel</button>
+                      <button className="clear-btn" onClick={getChannelInfo}>Clear</button>
+                    </div>
+                  </div>
                 {
                   selectedYoutubeChannel? (
                     <div className="selectedChannel">
