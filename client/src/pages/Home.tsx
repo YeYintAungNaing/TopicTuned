@@ -77,7 +77,7 @@ export default function Home() {
   async function fetchYoutube() {
     try {
       const newsData : any = await axios.get(`${API_BASE_URL}/Youtube`);
-      console.log(newsData.data)
+      //console.log(newsData.data)
       setYoutubeVideos(newsData.data)
     }
     catch(e  : any) {
@@ -137,7 +137,7 @@ export default function Home() {
     
   }, [ isLoading, currentUser])
 
-  console.log(currentUser)
+  //console.log(currentUser)
   return (
 
     <div className="home">

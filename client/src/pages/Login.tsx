@@ -19,7 +19,7 @@ export default function Login() {
     async function loginOnline() {
       
       try{
-        const response = await axios.post(`${API_BASE_URL}/auth/login`, {userName, password});
+        const response : any = await axios.post(`${API_BASE_URL}/auth/login`, {userName, password});
         
         if (typeof response.data !== "object") {
           throw new Error("Invalid API response. Expected JSON but received HTML.");

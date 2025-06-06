@@ -742,6 +742,44 @@ app.put('/preferences', async (req, res) => {
 })
 
 
+app.put('/users', async (req, res) => {
+  try{
+
+    const token = req.cookies?.jwt_token;
+
+    if (!token){
+        res.status(401).json({ ServerErrorMsg: "Not logged in" });
+        return
+    }
+
+
+    jwt.verify(token, "jwtkey", async (err, decoded) => { 
+
+        if (err) {
+          return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+        }
+
+        const { email, userName } = req.body
+        
+
+        await db.query(
+          'UPDATE users set user_name = $1, email = $2  WHERE user_id = $3',
+          [userName, email ,decoded.userId]
+        );
+    
+        res.status(200).json({message : "Profile changed successful"})
+      }
+    )
+  }
+
+  catch(e) {
+    res.status(500).json({ServerErrorMsg: "Internal Server Error" })
+    console.log(e)
+  }
+})
+
+
+
 app.post('/auth/logout', (req, res) => {
 
     try{

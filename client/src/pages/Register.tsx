@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {  useState } from "react"
 
 import axios from 'axios'
@@ -14,7 +15,7 @@ export default function Register() {
       async function onlineRegister() {
         
         try{
-            const response = await axios.post(`${API_BASE_URL}/auth/register`, {
+            const response : any = await axios.post(`${API_BASE_URL}/auth/register`, {
               userName,
               password,
             })
@@ -22,7 +23,7 @@ export default function Register() {
             //showAlert(response.data.message, 'success')
             navigate('/login')
         }
-        catch(e) {
+        catch(e : any) {
           if(e.response.data.ServerErrorMsg) {
             console.log(e.response.data.ServerErrorMsg)
             //showAlert(e.response.data.ServerErrorMsg, 'error')

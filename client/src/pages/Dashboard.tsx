@@ -35,10 +35,10 @@ export default function Dashboard() {
 
   const {currentUser} = useContext(GlobalState)!;
 
-  const [userName, setUserName] =useState(currentUser?.user_name || '') 
+  const [userName, setUserName] =useState<string>(currentUser?.user_name || '') 
   
-  const [email, setEmail] =useState(currentUser?.email || '') 
-  const [validEmail, setValidEmail] = useState("Empty")
+  const [email, setEmail] =useState<string>(currentUser?.email || '') 
+  const [validEmail, setValidEmail] = useState<"Empty" | boolean>("Empty")
 
   const [selectedTopic, setSelectedTopic] = useState<string>('general')
   const [selectedYoutubeChannel, setSelectedYoutubeChannel] = useState<YOUTUBE_CHANNEL | "">("")
@@ -61,9 +61,10 @@ export default function Dashboard() {
             }
         }
         editProfile()
+        
   }
 
-  function changeEmail(e) {
+  function changeEmail(e : any) {
       const v = e.target.value
       setEmail(v)
       if (emailValidator.validate(v)) {
@@ -76,8 +77,28 @@ export default function Dashboard() {
       }
   }
 
-  function editProfile() {
-    console.log('d')
+  async function editProfile() {
+    try{
+      const response : any = await axios.put(`${API_BASE_URL}/users`, {
+          userName,
+          email
+      })
+      console.log(response.data.message)
+
+    }
+    catch(e : any) {
+      if(e.response) {   
+        if(e.response.data.ServerErrorMsg) {  
+          console.log(e.response.data.ServerErrorMsg)  
+        }
+        else {
+          console.log(e.message)  
+        }
+      }
+      else{  
+        console.log(e.message)
+      }
+    }
   }
 
  
