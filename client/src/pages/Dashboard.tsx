@@ -5,6 +5,7 @@ import axios from 'axios'
 import "../styles/Dashboard.scss"
 import { GlobalState } from "../context/GlobalState";
 import emailValidator from 'email-validator'; 
+import { useNavigate } from "react-router-dom";
 
 
 const TOPICS = [
@@ -52,6 +53,8 @@ export default function Dashboard() {
   const [getGamespot, setGetGamespot] = useState<boolean>(false)
   const [isReady, setIsReady] = useState<boolean>(false)
 
+  const navigate = useNavigate()
+
   function changeProfileDetails() {
         
         if(validEmail !== "Empty") {
@@ -60,8 +63,7 @@ export default function Dashboard() {
                 return
             }
         }
-        editProfile()
-        
+        editProfile()     
   }
 
   function changeEmail(e : any) {
@@ -310,7 +312,7 @@ export default function Dashboard() {
                   <div>{`Account created at ${currentUser?.created_at}`}</div>
                   <div className="btn-container">
                       <button onClick={changeProfileDetails}>Change profile</button>
-                      <button onClick={changeProfileDetails}>Reset password</button>
+                      <button onClick={()=> navigate('/resetPassword')}>Reset password</button>
                   </div>    
                 </div>
                 <div className="gnews">

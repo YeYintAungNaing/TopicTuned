@@ -7,10 +7,17 @@ import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
 import cookieParser from "cookie-parser"
 import {redis} from './redisServer'
+import {Resend} from "resend"
+import crypto from 'crypto'
 
-const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
-const GAMESPOT_API_KEY = process.env.GAMESPOT_API_KEY;
+
+
+const GNEWS_API_KEY : string = process.env.GNEWS_API_KEY as string;
+const YOUTUBE_API_KEY : string = process.env.YOUTUBE_API_KEY as string;
+const GAMESPOT_API_KEY : string = process.env.GAMESPOT_API_KEY as string;
+const MY_WEBSITE : string = process.env.MY_WEBSITE as string;
+const RESEND_API_SECRET : string = process.env.RESEND_API_SECRET as string;
+const RESEND_EMAIL : string = process.env.RESEND_EMAIL as string
 
 // interface YouTubeChannelsResponse {
 //   items: {
@@ -54,6 +61,7 @@ interface YOUTUBE_CHANNEL {
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
+const resend = new Resend(RESEND_API_SECRET);
 
 app.use(cors({
     origin: ["http://localhost:5173", "http://localhost:5174"],
@@ -146,6 +154,153 @@ app.post("/auth/login", async (req, res) => {
 function delay(ms : number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+
+// generating code and sending code
+app.post('/users/:id/generateCode',  (req, res) => {
+
+    try{
+        const token = req.cookies.jwt_token;
+
+        if (!token){
+            res.status(401).json({ ServerErrorMsg: "Not logged in" });
+            return
+        }
+        //jwt.verify(token, "jwtkey", async (err: jwt.VerifyErrors | null, decoded: string | JwtPayload | undefined) => {
+        jwt.verify(token, "jwtkey", async (err, decoded) => {
+
+            if (err) {
+                return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+            }
+
+            const code = crypto.randomInt(100000, 999999).toString()
+            const expirationTime = 2 * 60 * 1000; 
+            const expiresAt = new Date(Date.now() + expirationTime).toISOString();
+            const email = req.body.email
+
+            //await db.query('SELECT * FROM preferences WHERE user_id = $1', [decoded.userId])
+
+            await db.query("INSERT INTO verification_codes (user_id, code, expires_at) VALUES ($1, $2, $3)",[
+              decoded.userId, 
+              code, 
+              expiresAt
+            ])
+                 
+           
+            await resend.emails.send({
+                from: RESEND_EMAIL,
+                to: [email],
+                subject: "Verification code",
+                html:  `
+                <div style="font-family: Arial, sans-serif; color: #333; text-align: center;">
+                  <h1>Your Verification Code</h1>
+                  <p>Use the code below to complete your verification process:</p>
+                  <div style="
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: #f2f2f2;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                    font-size: 24px;
+                    letter-spacing: 4px;
+                    font-weight: bold;
+                  ">
+                    ${code}
+                  </div>
+                  <p style="margin-top: 20px; color: #777; font-size: 12px;">
+                    This code will expire in 10 minutes. If you did not request this, please ignore this email.
+                  </p>
+                </div>
+              `
+            }); 
+
+            res.status(200).json({message : "Code has been sent"})
+        })
+
+    }catch(e) {
+        res.status(500).json({ ServerErrorMsg: "Internal Server Error" })
+        console.log(e)
+    }
+})
+
+//verifying code
+app.put('/users/:id/verifyCode', (req, res) => {
+    try{
+        const token = req.cookies.jwt_token;
+        
+
+        if (!token){
+            res.status(401).json({ ServerErrorMsg: "Not logged in" });
+            return
+        }
+
+        jwt.verify(token, "jwtkey", async (err, decoded) => {
+
+            if (err) {
+                return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+            }
+
+            const code = req.body.code
+            
+            //console.log(code)
+            const veriCode = await db.query("SELECT * from verification_codes WHERE user_id = $1 AND code = $2",[  // return undefined if no match
+                 decoded.userId,code  
+            ])
+
+            if (veriCode.rows.length > 0) {
+                const now = new Date();
+                if (new Date(veriCode.rows[0].expires_at) > now) {
+                    res.status(200).json({message : "Verification successful"})
+                    return
+                }
+                else{
+                    res.status(403).json({ServerErrorMsg : "Your code is expired"})
+                    return
+                }
+            }
+            else {
+                res.status(404).json({ServerErrorMsg : "Verification failed"})
+                return
+            }
+        })
+
+    }catch(e) {
+        res.status(500).json({ ServerErrorMsg: "Internal Server Error" })
+        console.log(e)
+    }
+})
+
+
+//resetting password
+app.put('/users/:id/resetPassword', (req, res) => {
+    try{
+        const token = req.cookies.jwt_token;
+
+        if (!token){
+            res.status(401).json({ ServerErrorMsg: "Not logged in" });
+            return
+        }
+
+        jwt.verify(token, "jwtkey", async (err, decoded) => {
+
+            if (err) {
+                return res.status(403).json({ ServerErrorMsg: "Invalid token" });
+            }
+            const password = req.body.password
+            const salt = bcrypt.genSaltSync(10);
+            const hashedPassword = bcrypt.hashSync(password, salt);
+
+            await db.query("UPDATE users SET password = $1 where user_id = $2",
+                [hashedPassword, decoded.userId])
+
+            res.status(200).json({message : "Successfully changed the password"})
+        })    
+    }
+    catch(e) {
+        res.status(500).json({ ServerErrorMsg: "Internal Server Error" })
+        //console.log(e)
+    }
+})
 
 
 async function fetchNewsByCategory(categories: string[]) {
@@ -335,7 +490,6 @@ app.put('/preferences/gnews', async (req, res) => {
     console.log(e)
   }
 })
-
 
 app.get('/Youtube', async (req, res) => {
         try {
