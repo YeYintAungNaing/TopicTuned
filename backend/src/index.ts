@@ -735,60 +735,6 @@ app.get('/gamespot', async (req, res) => {
 })
 
 
-// app.get('/reddit/:subreddit', async (req, res) => {
-//   const keyword = req.params.subreddit as string
-
-//   if (!keyword) {
-//     res.status(400).json({ error: 'Missing search keyword' });
-//     return
-//   }
-
-//   try {
-//     const response = await axios.get(`https://www.reddit.com/subreddits/search.json`, {
-//       params: {
-//         q: keyword,
-//         limit: 10,
-//       },
-//       headers: {
-//         'User-Agent': 'TopicTuned/1.0',
-//       },
-//     });
-
-//     const match = response.data.data.children.find((item: any) =>
-//       item.data.display_name.toLowerCase() === keyword.toLowerCase()
-//     );
-
-//     if (!match) {
-//        res.status(404).json({ ServerErrorMsg: 'Subreddit not found' });
-//        return
-//     }
-
-//     const data = match.data;
-//     // const result = {
-//     //   name: data.display_name,
-//     //   title: data.title,
-//     //   icon: data.icon_img || data.community_icon || '',
-//     //   subscribers: data.subscribers,
-//     //   description: data.public_description,
-//     // };
-
-//     const result = {
-//       name: data.display_name,
-//       title: data.title,
-//       icon: data.icon_img || data.community_icon || '',
-//       subscribers: data.subscribers,
-//       description: data.public_description,
-//     };
-
-//     res.json(result);
-//   } 
-//   catch (error: any) {
-//     console.error('Reddit search failed:', error.message);
-//     res.status(500).json({ ServerErrorMsg: "Internal Server Error" });
-//   }
-// });
-
-
 app.get('/auth/verifyToken' , (req, res) => {
 
   try{
@@ -1001,4 +947,58 @@ app.listen(8800, ()=> {
           // jwt.verify(token, "jwtkey", async (err, decoded) => { 
             
          // })
+
+
+// app.get('/reddit/:subreddit', async (req, res) => {
+//   const keyword = req.params.subreddit as string
+
+//   if (!keyword) {
+//     res.status(400).json({ error: 'Missing search keyword' });
+//     return
+//   }
+
+//   try {
+//     const response = await axios.get(`https://www.reddit.com/subreddits/search.json`, {
+//       params: {
+//         q: keyword,
+//         limit: 10,
+//       },
+//       headers: {
+//         'User-Agent': 'TopicTuned/1.0',
+//       },
+//     });
+
+//     const match = response.data.data.children.find((item: any) =>
+//       item.data.display_name.toLowerCase() === keyword.toLowerCase()
+//     );
+
+//     if (!match) {
+//        res.status(404).json({ ServerErrorMsg: 'Subreddit not found' });
+//        return
+//     }
+
+//     const data = match.data;
+//     // const result = {
+//     //   name: data.display_name,
+//     //   title: data.title,
+//     //   icon: data.icon_img || data.community_icon || '',
+//     //   subscribers: data.subscribers,
+//     //   description: data.public_description,
+//     // };
+
+//     const result = {
+//       name: data.display_name,
+//       title: data.title,
+//       icon: data.icon_img || data.community_icon || '',
+//       subscribers: data.subscribers,
+//       description: data.public_description,
+//     };
+
+//     res.json(result);
+//   } 
+//   catch (error: any) {
+//     console.error('Reddit search failed:', error.message);
+//     res.status(500).json({ ServerErrorMsg: "Internal Server Error" });
+//   }
+// });
          

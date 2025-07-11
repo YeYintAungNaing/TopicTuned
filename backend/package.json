@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/index.js",
-    "dev": "nodemon --exec vite-node src/index.ts"
+    "dev": "nodemon --exec vite-node src/index.ts",
+    "single": "vite-node src/test.ts"
   },
   "keywords": [],
   "author": "",
